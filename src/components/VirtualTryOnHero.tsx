@@ -1,8 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Camera, Sparkles, Zap, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import heroImage from "@/assets/hero-virtual-tryon.jpg";
 
-export const VirtualTryOnHero = () => {
+interface VirtualTryOnHeroProps {
+  onStartTrial?: () => void;
+}
+
+export const VirtualTryOnHero = ({ onStartTrial }: VirtualTryOnHeroProps) => {
+  const handleStartTrial = () => {
+    toast.success("Starting virtual trial experience...");
+    onStartTrial?.();
+    // Scroll to camera interface
+    document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  };
+
+  const handleSeeHowItWorks = () => {
+    toast.info("Learn how our AI technology works!");
+    // Could open a modal or navigate to tutorial
+  };
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
       {/* Background Image with Overlay */}
@@ -54,6 +72,7 @@ export const VirtualTryOnHero = () => {
             variant="hero" 
             size="xl" 
             className="group"
+            onClick={handleStartTrial}
           >
             <Camera className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             Start Virtual Trial
@@ -64,6 +83,7 @@ export const VirtualTryOnHero = () => {
             variant="glass" 
             size="xl"
             className="group"
+            onClick={handleSeeHowItWorks}
           >
             <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
             See How It Works

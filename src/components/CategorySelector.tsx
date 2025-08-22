@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Shirt, Watch, Palette, Glasses, Crown, Gem } from "lucide-react";
+import { toast } from "sonner";
 
 const categories = [
   {
@@ -56,9 +57,22 @@ const categories = [
 interface CategorySelectorProps {
   selectedCategory: string | null;
   onSelectCategory: (categoryId: string) => void;
+  onContinueToTrial?: () => void;
 }
 
-export const CategorySelector = ({ selectedCategory, onSelectCategory }: CategorySelectorProps) => {
+export const CategorySelector = ({ selectedCategory, onSelectCategory, onContinueToTrial }: CategorySelectorProps) => {
+  const handleContinueToTrial = () => {
+    if (!selectedCategory) {
+      toast.error("Please select a category first!");
+      return;
+    }
+    toast.success("Great choice! Let's start your virtual trial.");
+    onContinueToTrial?.();
+    // Scroll to virtual trial interface
+    document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  };
   return (
     <section className="py-16 px-6">
       <div className="max-w-6xl mx-auto">
@@ -125,7 +139,7 @@ export const CategorySelector = ({ selectedCategory, onSelectCategory }: Categor
 
         {selectedCategory && (
           <div className="text-center mt-8">
-            <Button variant="hero" size="lg">
+            <Button variant="hero" size="lg" onClick={handleContinueToTrial}>
               Continue to Virtual Trial
             </Button>
           </div>

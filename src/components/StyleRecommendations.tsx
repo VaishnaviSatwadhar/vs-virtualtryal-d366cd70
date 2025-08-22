@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import {
   Star,
   Shuffle
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface StyleRecommendation {
   id: string;
@@ -99,6 +101,36 @@ const categoryConfig = {
 };
 
 export const StyleRecommendations = () => {
+  const [likedRecommendations, setLikedRecommendations] = useState<string[]>([]);
+
+  const handleTryStyle = (styleName: string) => {
+    toast.success(`Starting virtual try-on for "${styleName}"`);
+    // Navigate to virtual try-on with this style preset
+    document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  };
+
+  const handleLikeRecommendation = (recId: string) => {
+    const isLiked = likedRecommendations.includes(recId);
+    if (isLiked) {
+      setLikedRecommendations(prev => prev.filter(id => id !== recId));
+      toast.info("Removed from favorites");
+    } else {
+      setLikedRecommendations(prev => [...prev, recId]);
+      toast.success("Added to favorites!");
+    }
+  };
+
+  const handleShuffleStyle = (styleName: string) => {
+    toast.info(`Generating variations for "${styleName}"...`);
+    // Generate new variations of this style
+  };
+
+  const handleGetMoreRecommendations = () => {
+    toast.success("Loading more personalized recommendations...");
+    // Load more recommendations from AI
+  };
   return (
     <section className="py-16 px-6 bg-gradient-hero">
       <div className="max-w-7xl mx-auto">
@@ -202,14 +234,28 @@ export const StyleRecommendations = () => {
 
                   {/* Actions */}
                   <div className="flex gap-3">
-                    <Button variant="hero" className="flex-1 group">
+                    <Button 
+                      variant="hero" 
+                      className="flex-1 group"
+                      onClick={() => handleTryStyle(rec.title)}
+                    >
                       Try This Style
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
-                    <Button variant="glass" size="icon">
-                      <Heart className="w-4 h-4" />
+                    <Button 
+                      variant="glass" 
+                      size="icon"
+                      onClick={() => handleLikeRecommendation(rec.id)}
+                    >
+                      <Heart className={`w-4 h-4 ${
+                        likedRecommendations.includes(rec.id) ? 'fill-destructive text-destructive' : ''
+                      }`} />
                     </Button>
-                    <Button variant="glass" size="icon">
+                    <Button 
+                      variant="glass" 
+                      size="icon"
+                      onClick={() => handleShuffleStyle(rec.title)}
+                    >
                       <Shuffle className="w-4 h-4" />
                     </Button>
                   </div>
@@ -247,7 +293,7 @@ export const StyleRecommendations = () => {
               </div>
             </div>
             
-            <Button variant="glow" size="lg">
+            <Button variant="glow" size="lg" onClick={handleGetMoreRecommendations}>
               <Sparkles className="w-5 h-5" />
               Get More Recommendations
             </Button>

@@ -13,6 +13,7 @@ import {
   Watch,
   Palette
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -119,6 +120,35 @@ interface ProductGalleryProps {
 export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [cart, setCart] = useState<string[]>([]);
+
+  const handleFilter = () => {
+    toast.info("Opening filter options...");
+    // Open filter modal or sidebar
+  };
+
+  const handleSearch = () => {
+    toast.info("Opening search...");
+    // Open search modal or focus search input
+  };
+
+  const handleTryOn = (productName: string) => {
+    toast.success(`Starting virtual try-on for ${productName}`);
+    // Navigate to virtual try-on interface with this product
+    document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  };
+
+  const handleAddToCart = (productId: string, productName: string) => {
+    setCart(prev => [...prev, productId]);
+    toast.success(`${productName} added to cart!`);
+  };
+
+  const handleLoadMore = () => {
+    toast.info("Loading more products...");
+    // Load more products from API
+  };
 
   const filteredProducts = selectedCategory 
     ? products.filter(product => product.category === selectedCategory)
@@ -138,7 +168,7 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
   };
 
   return (
-    <section className="py-16 px-6">
+    <section id="product-gallery" className="py-16 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12">
@@ -152,11 +182,11 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
           </div>
           
           <div className="flex gap-4 mt-6 lg:mt-0">
-            <Button variant="glass" size="sm">
+            <Button variant="glass" size="sm" onClick={handleFilter}>
               <Filter className="w-4 h-4" />
               Filter
             </Button>
-            <Button variant="glass" size="sm">
+            <Button variant="glass" size="sm" onClick={handleSearch}>
               <Search className="w-4 h-4" />
               Search
             </Button>
@@ -202,7 +232,7 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
 
                 {/* Hover Actions */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button variant="glow" size="sm">
+                  <Button variant="glow" size="sm" onClick={() => handleTryOn(product.name)}>
                     <Eye className="w-4 h-4" />
                     Try On
                   </Button>
@@ -279,7 +309,11 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
                     )}
                   </div>
                   
-                  <Button variant="hero" size="sm">
+                  <Button 
+                    variant="hero" 
+                    size="sm" 
+                    onClick={() => handleAddToCart(product.id, product.name)}
+                  >
                     <ShoppingCart className="w-4 h-4" />
                     Add to Cart
                   </Button>
@@ -291,7 +325,7 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
 
         {/* Load More */}
         <div className="text-center mt-12">
-          <Button variant="glass" size="lg">
+          <Button variant="glass" size="lg" onClick={handleLoadMore}>
             Load More Products
           </Button>
         </div>

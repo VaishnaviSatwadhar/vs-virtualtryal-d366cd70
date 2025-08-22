@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Shirt
 } from "lucide-react";
+import { toast } from "sonner";
 import cameraInterfaceImage from "@/assets/camera-interface.jpg";
 
 interface DetectionPoint {
@@ -30,6 +31,56 @@ export const VirtualTryOnInterface = () => {
   const [detectionPoints, setDetectionPoints] = useState<DetectionPoint[]>([]);
   const [selectedProduct, setSelectedProduct] = useState("Classic T-Shirt");
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const handleReset = () => {
+    toast.info("Resetting virtual trial...");
+    setDetectionPoints([]);
+    // Reset any filters or adjustments
+  };
+
+  const handleSave = () => {
+    if (!isActive) {
+      toast.error("Please start the trial first!");
+      return;
+    }
+    toast.success("Virtual trial saved successfully!");
+    // Save screenshot or trial data
+  };
+
+  const handleShare = () => {
+    if (!isActive) {
+      toast.error("Please start the trial first!");
+      return;
+    }
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Virtual Try-On',
+        text: 'Check out how I look in this outfit!',
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+
+  const handleSettings = () => {
+    toast.info("Opening settings...");
+    // Open settings modal
+  };
+
+  const handleTryDifferentItem = () => {
+    toast.info("Loading product selection...");
+    // Open product picker or navigate to gallery
+    document.querySelector('#product-gallery')?.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  };
+
+  const handleQuickAction = (action: string) => {
+    toast.info(`${action} feature coming soon!`);
+    // Handle specific quick actions
+  };
 
   // Simulate AI detection
   useEffect(() => {
@@ -60,7 +111,7 @@ export const VirtualTryOnInterface = () => {
   };
 
   return (
-    <section className="py-16 px-6 bg-gradient-hero">
+    <section id="virtual-trial-interface" className="py-16 px-6 bg-gradient-hero">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-foreground mb-4">
@@ -150,21 +201,21 @@ export const VirtualTryOnInterface = () => {
                       <CameraOff className="w-5 h-5" />
                       Stop
                     </Button>
-                    <Button variant="glass" size="lg">
+                    <Button variant="glass" size="lg" onClick={handleReset}>
                       <RotateCcw className="w-5 h-5" />
                       Reset
                     </Button>
-                    <Button variant="glass" size="lg">
+                    <Button variant="glass" size="lg" onClick={handleSave}>
                       <Download className="w-5 h-5" />
                       Save
                     </Button>
-                    <Button variant="glass" size="lg">
+                    <Button variant="glass" size="lg" onClick={handleShare}>
                       <Share2 className="w-5 h-5" />
                       Share
                     </Button>
                   </>
                 )}
-                <Button variant="ghost" size="lg">
+                <Button variant="ghost" size="lg" onClick={handleSettings}>
                   <Settings className="w-5 h-5" />
                 </Button>
               </div>
@@ -189,7 +240,7 @@ export const VirtualTryOnInterface = () => {
                   <Badge variant="outline">$29.99</Badge>
                 </div>
               </div>
-              <Button variant="glow" className="w-full">
+              <Button variant="glow" className="w-full" onClick={handleTryDifferentItem}>
                 Try Different Item
               </Button>
             </Card>
@@ -222,16 +273,32 @@ export const VirtualTryOnInterface = () => {
                 Quick Actions
               </h3>
               <div className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => handleQuickAction("Change Background")}
+                >
                   Change Background
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => handleQuickAction("Adjust Lighting")}
+                >
                   Adjust Lighting
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => handleQuickAction("View in Mirror Mode")}
+                >
                   View in Mirror Mode
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => handleQuickAction("Compare with Photos")}
+                >
                   Compare with Photos
                 </Button>
               </div>
