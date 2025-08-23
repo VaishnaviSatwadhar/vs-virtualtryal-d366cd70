@@ -201,23 +201,29 @@ export const VirtualTryOnInterface = () => {
           <div className="lg:col-span-2">
             <Card className="bg-gradient-card border-border p-6 relative overflow-hidden">
               <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
-                {/* Live Camera Feed */}
+                {/* Live Camera Feed - Front facing camera for face view */}
                 {isActive && stream && (
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover scale-x-[-1]"
+                    onLoadedMetadata={() => {
+                      if (videoRef.current) {
+                        videoRef.current.play();
+                        toast.success("Live camera feed active - your face is now visible!");
+                      }
+                    }}
                   />
                 )}
                 
                 {/* Captured Image Preview */}
-                {capturedImage && !stream && (
+                {capturedImage && !isActive && (
                   <img 
                     src={capturedImage}
                     alt="Captured image"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover scale-x-[-1]"
                   />
                 )}
                 
