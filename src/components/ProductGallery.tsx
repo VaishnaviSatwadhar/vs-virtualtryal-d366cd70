@@ -15,6 +15,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+// Import product images
+import blackTshirt from "@/assets/products/black-tshirt.jpg";
+import denimJacket from "@/assets/products/denim-jacket.jpg";
+import redDress from "@/assets/products/red-dress.jpg";
+import silverWatch from "@/assets/products/silver-watch.jpg";
+import goldSmartwatch from "@/assets/products/gold-smartwatch.jpg";
+import whiteHoodie from "@/assets/products/white-hoodie.jpg";
+
 interface Product {
   id: string;
   name: string;
@@ -34,40 +42,40 @@ interface Product {
 const products: Product[] = [
   {
     id: "1",
-    name: "Classic Cotton T-Shirt",
+    name: "Classic Black T-Shirt",
     brand: "StyleCorp",
     price: 29.99,
     originalPrice: 39.99,
     rating: 4.5,
     reviews: 128,
     category: 'clothing',
-    image: "shirt",
+    image: blackTshirt,
     colors: ["#000000", "#FFFFFF", "#FF6B6B", "#4ECDC4"],
     sizes: ["XS", "S", "M", "L", "XL"],
     isOnSale: true,
   },
   {
     id: "2", 
-    name: "Smart Fitness Watch",
+    name: "Premium Silver Watch",
     brand: "TechWear",
     price: 199.99,
     rating: 4.8,
     reviews: 256,
     category: 'accessories',
-    image: "watch",
-    colors: ["#000000", "#C0C0C0", "#FFD700"],
+    image: silverWatch,
+    colors: ["#C0C0C0", "#000000", "#FFD700"],
     isNew: true,
   },
   {
     id: "3",
-    name: "Luxury Lipstick Set",
-    brand: "BeautyLux",
-    price: 45.00,
-    rating: 4.6,
-    reviews: 89,
-    category: 'cosmetics',
-    image: "cosmetics",
-    colors: ["#FF6B9D", "#C44569", "#F8B500"],
+    name: "Gold Smartwatch",
+    brand: "DigitalLux",
+    price: 299.99,
+    rating: 4.7,
+    reviews: 189,
+    category: 'accessories',
+    image: goldSmartwatch,
+    colors: ["#FFD700", "#000000", "#C0C0C0"],
   },
   {
     id: "4",
@@ -78,32 +86,34 @@ const products: Product[] = [
     rating: 4.4,
     reviews: 67,
     category: 'clothing',
-    image: "jacket",
+    image: denimJacket,
     colors: ["#1E3A8A", "#374151", "#000000"],
     sizes: ["S", "M", "L", "XL"],
     isOnSale: true,
   },
   {
     id: "5",
-    name: "Designer Sunglasses",
-    brand: "LuxVision",
-    price: 159.99,
-    rating: 4.7,
+    name: "Elegant Red Dress",
+    brand: "ChicStyle",
+    price: 89.99,
+    rating: 4.6,
     reviews: 143,
-    category: 'accessories',
-    image: "sunglasses",
-    colors: ["#000000", "#8B4513", "#FFD700"],
+    category: 'clothing',
+    image: redDress,
+    colors: ["#DC2626", "#000000", "#FFFFFF"],
+    sizes: ["XS", "S", "M", "L"],
   },
   {
     id: "6",
-    name: "Foundation Palette",
-    brand: "GlowCosmetics",
-    price: 38.50,
+    name: "Casual White Hoodie",
+    brand: "ComfortWear",
+    price: 49.99,
     rating: 4.3,
     reviews: 201,
-    category: 'cosmetics',
-    image: "foundation",
-    colors: ["#F5DEB3", "#DEB887", "#CD853F", "#8B4513"],
+    category: 'clothing',
+    image: whiteHoodie,
+    colors: ["#FFFFFF", "#000000", "#374151"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
   },
 ];
 
@@ -202,9 +212,19 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
             >
               {/* Product Image */}
               <div className="aspect-square bg-muted/20 relative overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center bg-gradient-accent/10">
-                  {getProductIcon(product.category)}
-                </div>
+                {typeof product.image === 'string' && product.image.startsWith('http') ? (
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                  />
+                ) : (
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                  />
+                )}
                 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">

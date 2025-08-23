@@ -18,6 +18,11 @@ import {
 import { toast } from "sonner";
 import cameraInterfaceImage from "@/assets/camera-interface.jpg";
 
+// Import product images
+import blackTshirt from "@/assets/products/black-tshirt.jpg";
+import silverWatch from "@/assets/products/silver-watch.jpg";
+import denimJacket from "@/assets/products/denim-jacket.jpg";
+
 interface DetectionPoint {
   x: number;
   y: number;
@@ -25,11 +30,43 @@ interface DetectionPoint {
   confidence: number;
 }
 
+interface SelectedProduct {
+  name: string;
+  brand: string;
+  price: number;
+  image: string;
+  size: string;
+}
+
+const availableProducts: SelectedProduct[] = [
+  {
+    name: "Classic Black T-Shirt",
+    brand: "StyleCorp",
+    price: 29.99,
+    image: blackTshirt,
+    size: "M"
+  },
+  {
+    name: "Premium Silver Watch",
+    brand: "TechWear", 
+    price: 199.99,
+    image: silverWatch,
+    size: "One Size"
+  },
+  {
+    name: "Denim Jacket",
+    brand: "UrbanStyle",
+    price: 79.99,
+    image: denimJacket,
+    size: "M"
+  }
+];
+
 export const VirtualTryOnInterface = () => {
   const [isActive, setIsActive] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionPoints, setDetectionPoints] = useState<DetectionPoint[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState("Classic T-Shirt");
+  const [selectedProduct, setSelectedProduct] = useState<SelectedProduct>(availableProducts[0]);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -341,19 +378,45 @@ export const VirtualTryOnInterface = () => {
                 Selected Product
               </h3>
               <div className="bg-muted/20 rounded-lg p-4 mb-4">
-                <div className="w-full h-32 bg-gradient-accent/20 rounded-lg mb-3 flex items-center justify-center">
-                  <Shirt className="w-12 h-12 text-accent" />
+                <div className="w-full h-32 bg-gradient-accent/20 rounded-lg mb-3 overflow-hidden">
+                  <img 
+                    src={selectedProduct.image} 
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <h4 className="font-medium text-foreground">{selectedProduct}</h4>
-                <p className="text-sm text-muted-foreground">Premium Cotton Blend</p>
+                <h4 className="font-medium text-foreground">{selectedProduct.name}</h4>
+                <p className="text-sm text-muted-foreground">{selectedProduct.brand}</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="secondary">Size: M</Badge>
-                  <Badge variant="outline">$29.99</Badge>
+                  <Badge variant="secondary">Size: {selectedProduct.size}</Badge>
+                  <Badge variant="outline">${selectedProduct.price}</Badge>
                 </div>
               </div>
-              <Button variant="glow" className="w-full" onClick={handleTryDifferentItem}>
+              <Button variant="glow" className="w-full mb-2" onClick={handleTryDifferentItem}>
                 Try Different Item
               </Button>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {availableProducts.map((product, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      toast.success(`Switched to ${product.name}`);
+                    }}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedProduct.name === product.name 
+                        ? 'border-primary shadow-glow' 
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
             </Card>
 
             {/* AI Analysis */}
