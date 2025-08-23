@@ -30,12 +30,81 @@ export const VirtualTryOnInterface = () => {
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionPoints, setDetectionPoints] = useState<DetectionPoint[]>([]);
   const [selectedProduct, setSelectedProduct] = useState("Classic T-Shirt");
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Camera functions
+  const requestCameraAccess = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "user" },
+        audio: false 
+      });
+      setStream(mediaStream);
+      setHasPermission(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      
+      toast.success("Camera access granted!");
+      return mediaStream;
+    } catch (error) {
+      console.error("Camera access denied:", error);
+      setHasPermission(false);
+      toast.error("Camera access denied. Please enable camera permissions.");
+      return null;
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  };
+
+  const captureImage = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      toast.error("Camera not ready!");
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      toast.error("Canvas not available!");
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/png');
+    setCapturedImage(imageData);
+    toast.success("Image captured successfully!");
+  };
+
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
 
   const handleReset = () => {
     toast.info("Resetting virtual trial...");
     setDetectionPoints([]);
-    // Reset any filters or adjustments
+    setCapturedImage(null);
   };
 
   const handleSave = () => {
@@ -99,15 +168,19 @@ export const VirtualTryOnInterface = () => {
     }
   }, [isActive, isDetecting]);
 
-  const handleStartTrial = () => {
-    setIsActive(true);
-    setIsDetecting(true);
+  const handleStartTrial = async () => {
+    const mediaStream = await requestCameraAccess();
+    if (mediaStream) {
+      setIsActive(true);
+      setIsDetecting(true);
+    }
   };
 
   const handleStopTrial = () => {
     setIsActive(false);
     setIsDetecting(false);
     setDetectionPoints([]);
+    stopCamera();
   };
 
   return (
@@ -128,11 +201,39 @@ export const VirtualTryOnInterface = () => {
           <div className="lg:col-span-2">
             <Card className="bg-gradient-card border-border p-6 relative overflow-hidden">
               <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
-                {/* Camera Feed Simulation */}
-                <img 
-                  src={cameraInterfaceImage}
-                  alt="Virtual camera interface"
-                  className="w-full h-full object-cover opacity-80"
+                {/* Live Camera Feed */}
+                {isActive && stream && (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                
+                {/* Captured Image Preview */}
+                {capturedImage && !stream && (
+                  <img 
+                    src={capturedImage}
+                    alt="Captured image"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                
+                {/* Fallback Static Image */}
+                {!isActive && !capturedImage && (
+                  <img 
+                    src={cameraInterfaceImage}
+                    alt="Virtual camera interface"
+                    className="w-full h-full object-cover opacity-80"
+                  />
+                )}
+
+                {/* Hidden Canvas for Capture */}
+                <canvas
+                  ref={canvasRef}
+                  className="hidden"
                 />
 
                 {/* Detection Overlay */}
@@ -178,7 +279,7 @@ export const VirtualTryOnInterface = () => {
                 )}
 
                 {/* Inactive State */}
-                {!isActive && (
+                {!isActive && !capturedImage && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                     <div className="text-center">
                       <Camera className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -200,6 +301,10 @@ export const VirtualTryOnInterface = () => {
                     <Button variant="destructive" size="lg" onClick={handleStopTrial}>
                       <CameraOff className="w-5 h-5" />
                       Stop
+                    </Button>
+                    <Button variant="glow" size="lg" onClick={captureImage}>
+                      <Camera className="w-5 h-5" />
+                      Capture
                     </Button>
                     <Button variant="glass" size="lg" onClick={handleReset}>
                       <RotateCcw className="w-5 h-5" />
