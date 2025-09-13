@@ -76,23 +76,35 @@ export const VirtualTryOnInterface = () => {
   // Camera functions
   const requestCameraAccess = async () => {
     try {
+      toast.info("🎥 Requesting camera access...");
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "user" },
+        video: { 
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false 
       });
+      
       setStream(mediaStream);
       setHasPermission(true);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Ensure video plays immediately
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+          toast.success("🎉 Your face is now live!");
+        };
       }
       
-      toast.success("Camera access granted!");
+      toast.success("✅ Camera connected - You look amazing!");
       return mediaStream;
     } catch (error) {
       console.error("Camera access denied:", error);
       setHasPermission(false);
-      toast.error("Camera access denied. Please enable camera permissions.");
+      toast.error("❌ Camera access denied. Please enable camera permissions and try again.");
       return null;
     }
   };
@@ -277,14 +289,23 @@ export const VirtualTryOnInterface = () => {
                     playsInline
                     muted
                     className="w-full h-full object-cover scale-x-[-1]"
+                    style={{ filter: 'brightness(1.1) contrast(1.05)' }}
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
-                        videoRef.current.play();
-                        toast.success("✨ Live face detected! You look great!");
+                        videoRef.current.play().then(() => {
+                          toast.success("👤 Your beautiful face is now live!");
+                          // Start detection immediately when face is visible
+                          setTimeout(() => {
+                            if (!isDetecting) setIsDetecting(true);
+                          }, 500);
+                        });
                       }
                     }}
-                    onLoadedData={() => {
-                      toast.success("📹 Camera ready - Your face is now live!");
+                    onPlaying={() => {
+                      toast.success("🔥 Live video active - Looking good!");
+                    }}
+                    onCanPlay={() => {
+                      toast.info("📹 Camera ready for your close-up!");
                     }}
                   />
                 )}
