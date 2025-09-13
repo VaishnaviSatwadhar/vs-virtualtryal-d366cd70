@@ -273,19 +273,22 @@ export const VirtualTryOnInterface = () => {
           <div className="lg:col-span-2">
             <Card className="bg-gradient-card border-border p-6 relative overflow-hidden">
               <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
-                {/* Live Camera Feed - Front facing camera for face view */}
+                {/* Live Camera Feed - Your Face Display */}
                 {isActive && stream && (
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover scale-x-[-1]"
-                    style={{ filter: 'brightness(1.1) contrast(1.05)' }}
+                    className="w-full h-full object-cover scale-x-[-1] rounded-lg"
+                    style={{ 
+                      filter: 'brightness(1.1) contrast(1.05)',
+                      background: '#000'
+                    }}
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
                         videoRef.current.play().then(() => {
-                          toast.success("👤 Your beautiful face is now live!");
+                          toast.success("📹 Your face is now live on screen!");
                           // Start detection immediately when face is visible
                           setTimeout(() => {
                             if (!isDetecting) setIsDetecting(true);
@@ -294,12 +297,30 @@ export const VirtualTryOnInterface = () => {
                       }
                     }}
                     onPlaying={() => {
-                      toast.success("🔥 Live video active - Looking good!");
+                      toast.success("✨ Camera active - You look great!");
                     }}
                     onCanPlay={() => {
-                      toast.info("📹 Camera ready for your close-up!");
+                      toast.info("🎥 Camera ready - Your face is visible!");
                     }}
                   />
+                )}
+                
+                {/* Camera Permission Status */}
+                {hasPermission === false && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <Camera className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        Camera Access Needed
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Please allow camera access to see your face on screen
+                      </p>
+                      <Button variant="hero" onClick={handleStartTrial}>
+                        Enable Camera
+                      </Button>
+                    </div>
+                  </div>
                 )}
                 
                 {/* Captured Image Preview */}
@@ -377,17 +398,17 @@ export const VirtualTryOnInterface = () => {
                 {!isActive ? (
                   <Button variant="hero" size="lg" onClick={handleStartTrial}>
                     <Camera className="w-5 h-5" />
-                    Start Trial
+                    Show My Face
                   </Button>
                 ) : (
                   <>
                     <Button variant="destructive" size="lg" onClick={handleStopTrial}>
                       <CameraOff className="w-5 h-5" />
-                      Stop
+                      Stop Camera
                     </Button>
                     <Button variant="glow" size="lg" onClick={captureImage}>
                       <Camera className="w-5 h-5" />
-                      Capture
+                      Capture Photo
                     </Button>
                     <Button variant="glass" size="lg" onClick={handleReset}>
                       <RotateCcw className="w-5 h-5" />
