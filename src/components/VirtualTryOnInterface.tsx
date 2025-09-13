@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { 
   Camera, 
   CameraOff, 
@@ -62,6 +65,14 @@ const availableProducts: SelectedProduct[] = [
   }
 ];
 
+interface CameraSettings {
+  faceDetection: boolean;
+  mirrorMode: boolean;
+  brightnessBoost: boolean;
+  autoFocus: boolean;
+  highQuality: boolean;
+}
+
 export const VirtualTryOnInterface = () => {
   const [isActive, setIsActive] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
@@ -70,6 +81,14 @@ export const VirtualTryOnInterface = () => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [cameraSettings, setCameraSettings] = useState<CameraSettings>({
+    faceDetection: true,
+    mirrorMode: true,
+    brightnessBoost: true,
+    autoFocus: true,
+    highQuality: false
+  });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -183,8 +202,22 @@ export const VirtualTryOnInterface = () => {
   };
 
   const handleSettings = () => {
-    toast.info("Opening settings...");
-    // Open settings modal
+    setShowSettings(true);
+  };
+
+  const toggleCameraSetting = (setting: keyof CameraSettings) => {
+    setCameraSettings(prev => ({
+      ...prev,
+      [setting]: !prev[setting]
+    }));
+    
+    // Apply immediate effects
+    if (setting === 'faceDetection' && !cameraSettings.faceDetection) {
+      setIsDetecting(false);
+      setDetectionPoints([]);
+    }
+    
+    toast.success(`${setting.charAt(0).toUpperCase() + setting.slice(1)} ${!cameraSettings[setting] ? 'enabled' : 'disabled'}`);
   };
 
   const handleTryDifferentItem = () => {
@@ -204,7 +237,7 @@ export const VirtualTryOnInterface = () => {
   useEffect(() => {
     let animationFrame: number;
     
-    if (isActive && isDetecting && videoRef.current) {
+    if (isActive && isDetecting && cameraSettings.faceDetection && videoRef.current) {
       const detectFace = async () => {
         if (!videoRef.current) return;
         
@@ -231,6 +264,8 @@ export const VirtualTryOnInterface = () => {
       };
       
       detectFace();
+    } else if (!cameraSettings.faceDetection) {
+      setDetectionPoints([]);
     }
     
     return () => {
@@ -238,7 +273,7 @@ export const VirtualTryOnInterface = () => {
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [isActive, isDetecting]);
+  }, [isActive, isDetecting, cameraSettings.faceDetection]);
 
   const handleStartTrial = async () => {
     const mediaStream = await requestCameraAccess();
@@ -280,9 +315,11 @@ export const VirtualTryOnInterface = () => {
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover scale-x-[-1] rounded-lg"
+                    className={`w-full h-full object-cover rounded-lg ${
+                      cameraSettings.mirrorMode ? 'scale-x-[-1]' : ''
+                    }`}
                     style={{ 
-                      filter: 'brightness(1.2) contrast(1.1) saturate(1.1)',
+                      filter: `brightness(${cameraSettings.brightnessBoost ? '1.2' : '1'}) contrast(${cameraSettings.brightnessBoost ? '1.1' : '1'}) saturate(1.1)`,
                       background: '#000',
                       minHeight: '100%'
                     }}
@@ -290,9 +327,11 @@ export const VirtualTryOnInterface = () => {
                       if (videoRef.current) {
                         videoRef.current.play().then(() => {
                           toast.success("🎉 Your live face is now on screen!");
-                          setTimeout(() => {
-                            if (!isDetecting) setIsDetecting(true);
-                          }, 300);
+                          if (cameraSettings.faceDetection) {
+                            setTimeout(() => {
+                              if (!isDetecting) setIsDetecting(true);
+                            }, 300);
+                          }
                         });
                       }
                     }}
@@ -421,9 +460,74 @@ export const VirtualTryOnInterface = () => {
                     </Button>
                   </>
                 )}
-                <Button variant="ghost" size="lg" onClick={handleSettings}>
-                  <Settings className="w-5 h-5" />
-                </Button>
+                <Dialog open={showSettings} onOpenChange={setShowSettings}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="lg" onClick={handleSettings}>
+                      <Settings className="w-5 h-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Camera Settings</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 py-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="face-detection" className="text-sm font-medium">
+                          Face Detection
+                        </Label>
+                        <Switch
+                          id="face-detection"
+                          checked={cameraSettings.faceDetection}
+                          onCheckedChange={() => toggleCameraSetting('faceDetection')}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="mirror-mode" className="text-sm font-medium">
+                          Mirror Mode
+                        </Label>
+                        <Switch
+                          id="mirror-mode"
+                          checked={cameraSettings.mirrorMode}
+                          onCheckedChange={() => toggleCameraSetting('mirrorMode')}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="brightness-boost" className="text-sm font-medium">
+                          Brightness Boost
+                        </Label>
+                        <Switch
+                          id="brightness-boost"
+                          checked={cameraSettings.brightnessBoost}
+                          onCheckedChange={() => toggleCameraSetting('brightnessBoost')}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="high-quality" className="text-sm font-medium">
+                          High Quality
+                        </Label>
+                        <Switch
+                          id="high-quality"
+                          checked={cameraSettings.highQuality}
+                          onCheckedChange={() => toggleCameraSetting('highQuality')}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="auto-focus" className="text-sm font-medium">
+                          Auto Focus
+                        </Label>
+                        <Switch
+                          id="auto-focus"
+                          checked={cameraSettings.autoFocus}
+                          onCheckedChange={() => toggleCameraSetting('autoFocus')}
+                        />
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </Card>
           </div>
