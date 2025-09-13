@@ -274,7 +274,7 @@ export const VirtualTryOnInterface = () => {
             <Card className="bg-gradient-card border-border p-6 relative overflow-hidden">
               <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
                 {/* Live Camera Feed - Your Face Display */}
-                {isActive && stream && (
+                {isActive && stream ? (
                   <video
                     ref={videoRef}
                     autoPlay
@@ -282,28 +282,25 @@ export const VirtualTryOnInterface = () => {
                     muted
                     className="w-full h-full object-cover scale-x-[-1] rounded-lg"
                     style={{ 
-                      filter: 'brightness(1.1) contrast(1.05)',
-                      background: '#000'
+                      filter: 'brightness(1.2) contrast(1.1) saturate(1.1)',
+                      background: '#000',
+                      minHeight: '100%'
                     }}
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
                         videoRef.current.play().then(() => {
-                          toast.success("📹 Your face is now live on screen!");
-                          // Start detection immediately when face is visible
+                          toast.success("🎉 Your live face is now on screen!");
                           setTimeout(() => {
                             if (!isDetecting) setIsDetecting(true);
-                          }, 500);
+                          }, 300);
                         });
                       }
                     }}
                     onPlaying={() => {
-                      toast.success("✨ Camera active - You look great!");
-                    }}
-                    onCanPlay={() => {
-                      toast.info("🎥 Camera ready - Your face is visible!");
+                      toast.success("📹 Live! Your face is clearly visible");
                     }}
                   />
-                )}
+                ) : null}
                 
                 {/* Camera Permission Status */}
                 {hasPermission === false && (
