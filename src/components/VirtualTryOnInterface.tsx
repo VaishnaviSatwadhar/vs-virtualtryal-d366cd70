@@ -121,38 +121,128 @@ export const VirtualTryOnInterface = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Camera functions
+  // Enhanced Camera functions with proper permission handling
+  const checkCameraPermissions = async () => {
+    try {
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported');
+      }
+
+      // Check permission status
+      const permission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+      console.log('Camera permission:', permission.state);
+      
+      return permission.state !== 'denied';
+    } catch (error) {
+      console.log('Permission check failed:', error);
+      return true; // Assume permission is possible
+    }
+  };
+
   const requestCameraAccess = async () => {
     try {
       toast.info("🎥 Requesting camera access...");
       
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      // First check if camera permissions are available
+      const permissionsOk = await checkCameraPermissions();
+      if (!permissionsOk) {
+        throw new Error('Camera permissions denied');
+      }
+
+      // Request camera with optimal settings
+      const constraints = {
+        video: {
           facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { 
+            min: 640,
+            ideal: 1280,
+            max: 1920 
+          },
+          height: { 
+            min: 480,
+            ideal: 720,
+            max: 1080 
+          },
+          frameRate: { ideal: 30, max: 60 }
         },
         audio: false 
-      });
+      };
+
+      console.log('Requesting camera with constraints:', constraints);
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
+      console.log('Camera stream obtained:', mediaStream);
       setStream(mediaStream);
       setHasPermission(true);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        // Ensure video plays immediately
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-          toast.success("🎉 Your face is now live!");
+        
+        // Enhanced video setup
+        videoRef.current.onloadedmetadata = async () => {
+          console.log('Video metadata loaded');
+          if (videoRef.current) {
+            try {
+              await videoRef.current.play();
+              console.log('Video playing successfully');
+              toast.success("🎉 Your face is now live on screen!");
+              
+              // Auto-start detection if enabled
+              if (cameraSettings.faceDetection) {
+                setTimeout(() => setIsDetecting(true), 500);
+              }
+            } catch (playError) {
+              console.error('Video play failed:', playError);
+              toast.error("Video playback failed. Please try again.");
+            }
+          }
+        };
+
+        videoRef.current.onerror = (error) => {
+          console.error('Video element error:', error);
+          toast.error("Camera display error. Please refresh and try again.");
         };
       }
       
-      toast.success("✅ Camera connected - You look amazing!");
+      toast.success("✅ Camera connected successfully!");
       return mediaStream;
-    } catch (error) {
-      console.error("Camera access denied:", error);
+      
+    } catch (error: any) {
+      console.error("Camera access error:", error);
       setHasPermission(false);
-      toast.error("❌ Camera access denied. Please enable camera permissions and try again.");
+      
+      // Detailed error handling
+      if (error.name === 'NotAllowedError') {
+        toast.error("❌ Camera access denied. Please allow camera permissions and refresh the page.");
+      } else if (error.name === 'NotFoundError') {
+        toast.error("❌ No camera found. Please connect a camera and try again.");
+      } else if (error.name === 'NotReadableError') {
+        toast.error("❌ Camera is busy or unavailable. Please close other apps using the camera.");
+      } else if (error.name === 'OverconstrainedError') {
+        toast.error("❌ Camera doesn't meet requirements. Trying with basic settings...");
+        
+        // Fallback with basic constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "user" }, 
+            audio: false 
+          });
+          setStream(basicStream);
+          setHasPermission(true);
+          if (videoRef.current) {
+            videoRef.current.srcObject = basicStream;
+          }
+          toast.success("✅ Camera connected with basic settings!");
+          return basicStream;
+        } catch (fallbackError) {
+          console.error('Fallback camera access failed:', fallbackError);
+          toast.error("❌ Unable to access camera with any settings.");
+        }
+      } else {
+        toast.error(`❌ Camera error: ${error.message || 'Unknown error'}`);
+      }
+      
       return null;
     }
   };
