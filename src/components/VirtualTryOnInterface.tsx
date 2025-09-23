@@ -142,7 +142,15 @@ export const VirtualTryOnInterface = () => {
 
   const requestCameraAccess = async () => {
     try {
-      toast.info("🎥 Requesting camera access...");
+      // Check HTTPS requirement
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        toast.error("❌ Camera requires HTTPS connection. Please use a secure connection.");
+        return null;
+      }
+
+      toast.info("🎥 Requesting camera access...", {
+        description: "Please allow camera access when prompted"
+      });
       
       // First check if camera permissions are available
       const permissionsOk = await checkCameraPermissions();
@@ -172,21 +180,29 @@ export const VirtualTryOnInterface = () => {
       console.log('Requesting camera with constraints:', constraints);
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      console.log('Camera stream obtained:', mediaStream);
+      console.log('Camera stream obtained successfully:', {
+        active: mediaStream.active,
+        tracks: mediaStream.getVideoTracks().length
+      });
+      
       setStream(mediaStream);
       setHasPermission(true);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         
-        // Enhanced video setup
+        // Enhanced video setup with timeout safety
         videoRef.current.onloadedmetadata = async () => {
           console.log('Video metadata loaded');
           if (videoRef.current) {
             try {
+              // Ensure video can autoplay
+              videoRef.current.muted = true;
+              videoRef.current.playsInline = true;
+              
               await videoRef.current.play();
               console.log('Video playing successfully');
-              toast.success("🎉 Your face is now live on screen!");
+              toast.success("🎉 Camera is live! Your face is now visible on screen!");
               
               // Auto-start detection if enabled
               if (cameraSettings.faceDetection) {
@@ -194,7 +210,14 @@ export const VirtualTryOnInterface = () => {
               }
             } catch (playError) {
               console.error('Video play failed:', playError);
-              toast.error("Video playback failed. Please try again.");
+              toast.error("Video playback failed. Trying to resolve...");
+              
+              // Retry play with user interaction
+              setTimeout(() => {
+                if (videoRef.current) {
+                  videoRef.current.play().catch(console.error);
+                }
+              }, 1000);
             }
           }
         };
@@ -203,9 +226,17 @@ export const VirtualTryOnInterface = () => {
           console.error('Video element error:', error);
           toast.error("Camera display error. Please refresh and try again.");
         };
+
+        // Add video stream event listeners
+        mediaStream.getVideoTracks().forEach(track => {
+          track.addEventListener('ended', () => {
+            toast.error("Camera access was revoked. Please restart the trial.");
+            handleStopTrial();
+          });
+        });
       }
       
-      toast.success("✅ Camera connected successfully!");
+      toast.success("✅ Camera connected successfully! You should see your face now.");
       return mediaStream;
       
     } catch (error: any) {
@@ -659,9 +690,9 @@ export const VirtualTryOnInterface = () => {
               {/* Controls */}
               <div className="flex justify-center gap-4 mt-6">
                 {!isActive ? (
-                  <Button variant="hero" size="lg" onClick={handleStartTrial}>
+                  <Button variant="hero" size="lg" onClick={handleStartTrial} className="pulse-glow">
                     <Camera className="w-5 h-5" />
-                    Show My Face
+                    Start Camera & Show My Face
                   </Button>
                 ) : (
                   <>
