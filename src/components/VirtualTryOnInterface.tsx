@@ -696,11 +696,6 @@ export const VirtualTryOnInterface = () => {
                   </Button>
                 ) : (
                   <>
-                    {/* Primary Stop Button - Most Prominent */}
-                    <Button variant="destructive" size="lg" onClick={handleStopTrial} className="shadow-lg">
-                      <CameraOff className="w-5 h-5" />
-                      Stop Camera
-                    </Button>
                     <Button variant="glow" size="lg" onClick={captureImage} disabled={isAnalyzing}>
                       {isAnalyzing ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -708,6 +703,35 @@ export const VirtualTryOnInterface = () => {
                         <Camera className="w-5 h-5" />
                       )}
                       {isAnalyzing ? "Analyzing..." : "Capture Photo"}
+                    </Button>
+                    <Button 
+                      variant="hero" 
+                      size="lg" 
+                      onClick={generateVirtualTryOn}
+                      disabled={!capturedImage || isGeneratingTryOn}
+                    >
+                      {isGeneratingTryOn ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-5 h-5" />
+                      )}
+                      {isGeneratingTryOn ? "Generating..." : "Try On T-Shirt"}
+                    </Button>
+                    <Button variant="glass" size="lg" onClick={handleReset}>
+                      <RotateCcw className="w-5 h-5" />
+                      Reset
+                    </Button>
+                    <Button variant="destructive" size="lg" onClick={handleStopTrial} className="shadow-lg">
+                      <CameraOff className="w-5 h-5" />
+                      Stop Camera
+                    </Button>
+                    <Button variant="glass" size="lg" onClick={handleSave}>
+                      <Download className="w-5 h-5" />
+                      Save
+                    </Button>
+                    <Button variant="glass" size="lg" onClick={handleShare}>
+                      <Share2 className="w-5 h-5" />
+                      Share
                     </Button>
                     <Button 
                       variant="hero" 
