@@ -696,7 +696,8 @@ export const VirtualTryOnInterface = () => {
                   </Button>
                 ) : (
                   <>
-                    <Button variant="destructive" size="lg" onClick={handleStopTrial}>
+                    {/* Primary Stop Button - Most Prominent */}
+                    <Button variant="destructive" size="lg" onClick={handleStopTrial} className="shadow-lg">
                       <CameraOff className="w-5 h-5" />
                       Stop Camera
                     </Button>
