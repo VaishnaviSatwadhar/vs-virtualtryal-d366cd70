@@ -22,6 +22,14 @@ import redDress from "@/assets/products/red-dress.jpg";
 import silverWatch from "@/assets/products/silver-watch.jpg";
 import goldSmartwatch from "@/assets/products/gold-smartwatch.jpg";
 import whiteHoodie from "@/assets/products/white-hoodie.jpg";
+import leatherHandbag from "@/assets/products/leather-handbag.jpg";
+import goldNecklace from "@/assets/products/gold-necklace.jpg";
+import blackSunglasses from "@/assets/products/black-sunglasses.jpg";
+import whiteSneakers from "@/assets/products/white-sneakers.jpg";
+import leatherBelt from "@/assets/products/leather-belt.jpg";
+import baseballCap from "@/assets/products/baseball-cap.jpg";
+import pearlEarrings from "@/assets/products/pearl-earrings.jpg";
+import silkScarf from "@/assets/products/silk-scarf.jpg";
 
 interface Product {
   id: string;
@@ -114,6 +122,102 @@ const products: Product[] = [
     image: whiteHoodie,
     colors: ["#FFFFFF", "#000000", "#374151"],
     sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: "7",
+    name: "Luxury Leather Handbag",
+    brand: "LuxeBags",
+    price: 149.99,
+    rating: 4.9,
+    reviews: 92,
+    category: 'accessories',
+    image: leatherHandbag,
+    colors: ["#8B4513", "#000000", "#FFFFFF"],
+    isNew: true,
+  },
+  {
+    id: "8",
+    name: "Gold Chain Necklace",
+    brand: "JewelCraft",
+    price: 79.99,
+    originalPrice: 99.99,
+    rating: 4.6,
+    reviews: 174,
+    category: 'accessories',
+    image: goldNecklace,
+    colors: ["#FFD700", "#C0C0C0"],
+    isOnSale: true,
+  },
+  {
+    id: "9",
+    name: "Classic Black Sunglasses",
+    brand: "SunStyle",
+    price: 59.99,
+    rating: 4.4,
+    reviews: 238,
+    category: 'accessories',
+    image: blackSunglasses,
+    colors: ["#000000", "#8B4513", "#4169E1"],
+  },
+  {
+    id: "10",
+    name: "White Leather Sneakers",
+    brand: "SportLux",
+    price: 89.99,
+    rating: 4.7,
+    reviews: 156,
+    category: 'accessories',
+    image: whiteSneakers,
+    colors: ["#FFFFFF", "#000000", "#FF6B6B"],
+    sizes: ["7", "8", "9", "10", "11", "12"],
+  },
+  {
+    id: "11",
+    name: "Premium Leather Belt",
+    brand: "ClassicWear",
+    price: 39.99,
+    rating: 4.5,
+    reviews: 89,
+    category: 'accessories',
+    image: leatherBelt,
+    colors: ["#000000", "#8B4513"],
+    sizes: ["S", "M", "L", "XL"],
+  },
+  {
+    id: "12",
+    name: "Classic Baseball Cap",
+    brand: "UrbanCap",
+    price: 24.99,
+    originalPrice: 34.99,
+    rating: 4.3,
+    reviews: 267,
+    category: 'accessories',
+    image: baseballCap,
+    colors: ["#000000", "#FFFFFF", "#1E3A8A", "#DC2626"],
+    isOnSale: true,
+  },
+  {
+    id: "13",
+    name: "Pearl Drop Earrings",
+    brand: "EleganceJewels",
+    price: 45.99,
+    rating: 4.8,
+    reviews: 134,
+    category: 'accessories',
+    image: pearlEarrings,
+    colors: ["#FFFFFF", "#FFD700"],
+    isNew: true,
+  },
+  {
+    id: "14",
+    name: "Silk Pattern Scarf",
+    brand: "LuxeAccessories",
+    price: 32.99,
+    rating: 4.6,
+    reviews: 98,
+    category: 'accessories',
+    image: silkScarf,
+    colors: ["#FF6B6B", "#4ECDC4", "#FFD700", "#9B59B6"],
   },
 ];
 
