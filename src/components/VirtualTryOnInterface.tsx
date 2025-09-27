@@ -140,25 +140,66 @@ export const VirtualTryOnInterface = () => {
     }
   };
 
+  const showCameraPermissionHelp = () => {
+    toast.error("📱 Camera Permission Denied", {
+      description: "To enable camera access: 1) Click the camera icon in your browser's address bar, 2) Select 'Allow', 3) Refresh this page",
+      duration: 8000,
+      action: {
+        label: "Help Guide",
+        onClick: () => {
+          const helpText = `
+To fix camera permission issues:
+
+🔧 Chrome/Edge: 
+- Click the camera icon (🎥) in the address bar
+- Select "Always allow" 
+- Refresh the page
+
+🔧 Firefox:
+- Click the shield icon in the address bar
+- Select "Allow Camera"
+- Refresh the page
+
+🔧 Safari:
+- Go to Safari > Settings > Websites > Camera
+- Set this site to "Allow"
+- Refresh the page
+
+If problems persist, try:
+• Close other apps using your camera
+• Check if camera is connected
+• Try incognito/private browsing mode
+          `;
+          navigator.clipboard.writeText(helpText);
+          toast.success("Camera help guide copied to clipboard!");
+        },
+      },
+    });
+  };
+
   const requestCameraAccess = async () => {
     try {
       // Check HTTPS requirement
       if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        toast.error("❌ Camera requires HTTPS connection. Please use a secure connection.");
+        toast.error("🔒 Camera requires secure connection", {
+          description: "Please use HTTPS or localhost to access camera"
+        });
+        return null;
+      }
+
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error("❌ Camera not supported", {
+          description: "Your browser doesn't support camera access"
+        });
         return null;
       }
 
       toast.info("🎥 Requesting camera access...", {
-        description: "Please allow camera access when prompted"
+        description: "Please allow camera access when prompted by your browser"
       });
       
-      // First check if camera permissions are available
-      const permissionsOk = await checkCameraPermissions();
-      if (!permissionsOk) {
-        throw new Error('Camera permissions denied');
-      }
-
-      // Request camera with optimal settings
+      // Request camera with progressive fallback
       const constraints = {
         video: {
           facingMode: "user",
@@ -180,10 +221,7 @@ export const VirtualTryOnInterface = () => {
       console.log('Requesting camera with constraints:', constraints);
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      console.log('Camera stream obtained successfully:', {
-        active: mediaStream.active,
-        tracks: mediaStream.getVideoTracks().length
-      });
+      console.log('Camera stream obtained successfully');
       
       setStream(mediaStream);
       setHasPermission(true);
@@ -191,18 +229,15 @@ export const VirtualTryOnInterface = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         
-        // Enhanced video setup with timeout safety
+        // Enhanced video setup
         videoRef.current.onloadedmetadata = async () => {
-          console.log('Video metadata loaded');
           if (videoRef.current) {
             try {
-              // Ensure video can autoplay
               videoRef.current.muted = true;
               videoRef.current.playsInline = true;
               
               await videoRef.current.play();
-              console.log('Video playing successfully');
-              toast.success("🎉 Camera is live! Your face is now visible on screen!");
+              toast.success("🎉 Camera is live! Ready for virtual try-on!");
               
               // Auto-start detection if enabled
               if (cameraSettings.faceDetection) {
@@ -210,50 +245,49 @@ export const VirtualTryOnInterface = () => {
               }
             } catch (playError) {
               console.error('Video play failed:', playError);
-              toast.error("Video playback failed. Trying to resolve...");
-              
-              // Retry play with user interaction
-              setTimeout(() => {
-                if (videoRef.current) {
-                  videoRef.current.play().catch(console.error);
-                }
-              }, 1000);
+              toast.warning("Click anywhere to start video", {
+                description: "Browser requires user interaction for video playback"
+              });
             }
           }
         };
 
         videoRef.current.onerror = (error) => {
           console.error('Video element error:', error);
-          toast.error("Camera display error. Please refresh and try again.");
+          toast.error("Video display error. Please try again.");
         };
 
-        // Add video stream event listeners
+        // Handle stream ending
         mediaStream.getVideoTracks().forEach(track => {
           track.addEventListener('ended', () => {
-            toast.error("Camera access was revoked. Please restart the trial.");
+            toast.warning("Camera access ended. Please restart.");
             handleStopTrial();
           });
         });
       }
       
-      toast.success("✅ Camera connected successfully! You should see your face now.");
       return mediaStream;
       
     } catch (error: any) {
       console.error("Camera access error:", error);
       setHasPermission(false);
       
-      // Detailed error handling
-      if (error.name === 'NotAllowedError') {
-        toast.error("❌ Camera access denied. Please allow camera permissions and refresh the page.");
+      // Clear any previous success messages
+      toast.dismiss();
+      
+      // Specific error handling with solutions
+      if (error.name === 'NotAllowedError' || error.message?.includes('denied')) {
+        showCameraPermissionHelp();
       } else if (error.name === 'NotFoundError') {
-        toast.error("❌ No camera found. Please connect a camera and try again.");
+        toast.error("❌ No camera detected", {
+          description: "Please connect a camera and try again"
+        });
       } else if (error.name === 'NotReadableError') {
-        toast.error("❌ Camera is busy or unavailable. Please close other apps using the camera.");
+        toast.error("📹 Camera is busy", {
+          description: "Close other apps using your camera and try again"
+        });
       } else if (error.name === 'OverconstrainedError') {
-        toast.error("❌ Camera doesn't meet requirements. Trying with basic settings...");
-        
-        // Fallback with basic constraints
+        // Try with basic constraints
         try {
           const basicStream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: "user" }, 
@@ -267,11 +301,12 @@ export const VirtualTryOnInterface = () => {
           toast.success("✅ Camera connected with basic settings!");
           return basicStream;
         } catch (fallbackError) {
-          console.error('Fallback camera access failed:', fallbackError);
-          toast.error("❌ Unable to access camera with any settings.");
+          toast.error("❌ Camera doesn't meet requirements");
         }
       } else {
-        toast.error(`❌ Camera error: ${error.message || 'Unknown error'}`);
+        toast.error("❌ Camera access failed", {
+          description: error.message || 'Please check your camera and try again'
+        });
       }
       
       return null;
@@ -517,10 +552,26 @@ export const VirtualTryOnInterface = () => {
   }, [isActive, isDetecting, cameraSettings.faceDetection]);
 
   const handleStartTrial = async () => {
+    // Clear any existing error messages
+    toast.dismiss();
+    
+    toast.info("🚀 Starting virtual try-on...", {
+      description: "Setting up your camera for the best experience"
+    });
+    
     const mediaStream = await requestCameraAccess();
     if (mediaStream) {
       setIsActive(true);
       setIsDetecting(true);
+      toast.success("✨ Virtual try-on is ready! You can now see yourself on screen.");
+    } else {
+      // Camera access failed, show helpful guidance
+      setIsActive(false);
+      setIsDetecting(false);
+      toast.error("❌ Unable to start virtual try-on", {
+        description: "Camera access is required. Please check the help guide above.",
+        duration: 5000
+      });
     }
   };
 
@@ -584,18 +635,39 @@ export const VirtualTryOnInterface = () => {
                 
                 {/* Camera Permission Status */}
                 {hasPermission === false && (
-                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-                    <div className="text-center p-6">
-                      <Camera className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
-                        Camera Access Needed
+                  <div className="absolute inset-0 bg-gradient-to-br from-black/90 to-black/70 flex items-center justify-center">
+                    <div className="text-center p-8 max-w-md">
+                      <div className="bg-red-500/20 rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                        <CameraOff className="w-10 h-10 text-red-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-3">
+                        Camera Permission Required
                       </h3>
-                      <p className="text-muted-foreground mb-4">
-                        Please allow camera access to see your face on screen
+                      <p className="text-gray-300 mb-6 text-sm leading-relaxed">
+                        To see your live face and enable virtual try-on, please allow camera access in your browser.
                       </p>
-                      <Button variant="hero" onClick={handleStartTrial}>
-                        Enable Camera
-                      </Button>
+                      
+                      <div className="space-y-3 mb-6">
+                        <Button 
+                          variant="hero" 
+                          onClick={handleStartTrial}
+                          className="w-full"
+                        >
+                          <Camera className="w-4 h-4 mr-2" />
+                          Try Camera Again
+                        </Button>
+                        
+                        <div className="text-xs text-gray-400 space-y-2">
+                          <p>💡 <strong>Having trouble?</strong></p>
+                          <p>• Click the camera icon 🎥 in your browser's address bar</p>
+                          <p>• Select "Allow" for camera access</p>
+                          <p>• Refresh this page</p>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-gray-500">
+                        We never store or share your camera feed - it stays on your device.
+                      </p>
                     </div>
                   </div>
                 )}
