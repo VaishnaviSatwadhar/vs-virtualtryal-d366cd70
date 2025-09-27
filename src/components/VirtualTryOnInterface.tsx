@@ -179,8 +179,14 @@ If problems persist, try:
 
   const requestCameraAccess = async () => {
     try {
+      console.log('🚀 Starting camera access request...');
+      console.log('Current URL:', window.location.href);
+      console.log('Protocol:', location.protocol);
+      console.log('Hostname:', location.hostname);
+      
       // Check HTTPS requirement
       if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        console.error('❌ HTTPS requirement failed');
         toast.error("🔒 Camera requires secure connection", {
           description: "Please use HTTPS or localhost to access camera"
         });
@@ -189,10 +195,25 @@ If problems persist, try:
 
       // Check if getUserMedia is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('❌ getUserMedia not supported');
         toast.error("❌ Camera not supported", {
           description: "Your browser doesn't support camera access"
         });
         return null;
+      }
+
+      // Check existing permissions first
+      try {
+        const permission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+        console.log('📹 Camera permission status:', permission.state);
+        
+        if (permission.state === 'denied') {
+          console.error('❌ Camera permission already denied');
+          showCameraPermissionHelp();
+          return null;
+        }
+      } catch (permError) {
+        console.log('⚠️ Permission query not supported, continuing...');
       }
 
       toast.info("🎥 Requesting camera access...", {
@@ -218,10 +239,15 @@ If problems persist, try:
         audio: false 
       };
 
-      console.log('Requesting camera with constraints:', constraints);
+      console.log('📹 Requesting camera with constraints:', constraints);
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      console.log('Camera stream obtained successfully');
+      console.log('✅ Camera stream obtained successfully');
+      console.log('Stream details:', {
+        active: mediaStream.active,
+        videoTracks: mediaStream.getVideoTracks().length,
+        audioTracks: mediaStream.getAudioTracks().length
+      });
       
       setStream(mediaStream);
       setHasPermission(true);
@@ -231,12 +257,14 @@ If problems persist, try:
         
         // Enhanced video setup
         videoRef.current.onloadedmetadata = async () => {
+          console.log('📺 Video metadata loaded');
           if (videoRef.current) {
             try {
               videoRef.current.muted = true;
               videoRef.current.playsInline = true;
               
               await videoRef.current.play();
+              console.log('▶️ Video playing successfully');
               toast.success("🎉 Camera is live! Ready for virtual try-on!");
               
               // Auto-start detection if enabled
@@ -244,7 +272,7 @@ If problems persist, try:
                 setTimeout(() => setIsDetecting(true), 500);
               }
             } catch (playError) {
-              console.error('Video play failed:', playError);
+              console.error('❌ Video play failed:', playError);
               toast.warning("Click anywhere to start video", {
                 description: "Browser requires user interaction for video playback"
               });
@@ -253,13 +281,14 @@ If problems persist, try:
         };
 
         videoRef.current.onerror = (error) => {
-          console.error('Video element error:', error);
+          console.error('❌ Video element error:', error);
           toast.error("Video display error. Please try again.");
         };
 
         // Handle stream ending
         mediaStream.getVideoTracks().forEach(track => {
           track.addEventListener('ended', () => {
+            console.log('📹 Camera track ended');
             toast.warning("Camera access ended. Please restart.");
             handleStopTrial();
           });
@@ -269,30 +298,42 @@ If problems persist, try:
       return mediaStream;
       
     } catch (error: any) {
-      console.error("Camera access error:", error);
+      console.error("❌ Camera access error:", error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        constraint: error.constraint
+      });
+      
       setHasPermission(false);
       
       // Clear any previous success messages
       toast.dismiss();
       
       // Specific error handling with solutions
-      if (error.name === 'NotAllowedError' || error.message?.includes('denied')) {
+      if (error.name === 'NotAllowedError' || error.message?.includes('denied') || error.message?.includes('Permission')) {
+        console.error('🚫 Permission denied by user');
         showCameraPermissionHelp();
       } else if (error.name === 'NotFoundError') {
+        console.error('🔍 No camera found');
         toast.error("❌ No camera detected", {
           description: "Please connect a camera and try again"
         });
       } else if (error.name === 'NotReadableError') {
+        console.error('📹 Camera busy or hardware error');
         toast.error("📹 Camera is busy", {
           description: "Close other apps using your camera and try again"
         });
       } else if (error.name === 'OverconstrainedError') {
+        console.error('⚠️ Camera constraints not supported, trying fallback');
         // Try with basic constraints
         try {
           const basicStream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: "user" }, 
             audio: false 
           });
+          console.log('✅ Fallback camera stream obtained');
           setStream(basicStream);
           setHasPermission(true);
           if (videoRef.current) {
@@ -301,9 +342,11 @@ If problems persist, try:
           toast.success("✅ Camera connected with basic settings!");
           return basicStream;
         } catch (fallbackError) {
+          console.error('❌ Fallback camera access failed:', fallbackError);
           toast.error("❌ Camera doesn't meet requirements");
         }
       } else {
+        console.error('❌ Unknown camera error');
         toast.error("❌ Camera access failed", {
           description: error.message || 'Please check your camera and try again'
         });
