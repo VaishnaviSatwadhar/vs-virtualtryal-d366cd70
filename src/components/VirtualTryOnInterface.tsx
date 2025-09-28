@@ -179,14 +179,34 @@ If problems persist, try:
 
   const requestCameraAccess = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      // success — you have access to camera
+      console.log("Requesting camera access...");
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 },
+          facingMode: 'user'
+        }, 
+        audio: false 
+      });
+      
+      console.log("Camera stream obtained:", stream);
+      setStream(stream);
+      setHasPermission(true);
+      
+      // Ensure video element receives the stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setStream(stream);
-        setHasPermission(true);
-        toast.success("🎉 Camera is live! Ready for virtual try-on!");
+        console.log("Stream assigned to video element");
+        
+        // Force video to play
+        try {
+          await videoRef.current.play();
+          console.log("Video is now playing");
+          toast.success("🎉 Camera is live! Your face is now visible!");
+        } catch (playError) {
+          console.error("Video play error:", playError);
+          toast.error("Video playback failed - try refreshing the page");
+        }
       }
       return stream;
     } catch (err: any) {
