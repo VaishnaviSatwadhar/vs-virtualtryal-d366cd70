@@ -189,10 +189,47 @@ If problems persist, try:
         toast.success("🎉 Camera is live! Ready for virtual try-on!");
       }
       return stream;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error accessing camera:", err);
       setHasPermission(false);
-      toast.error("Please allow camera access in your browser settings");
+      
+      if (err.name === 'NotAllowedError') {
+        toast.error("🚫 Camera Blocked in Chrome", {
+          description: "Click the camera icon in your address bar and select 'Allow', then refresh the page",
+          duration: 10000,
+          action: {
+            label: "Fix Guide",
+            onClick: () => {
+              const fixGuide = `🔧 CHROME CAMERA FIX:
+
+1. Look for camera icon 🎥 in address bar (left of URL)
+2. Click it and select "Always allow"  
+3. Refresh page (F5)
+
+OR:
+
+1. Click lock icon 🔒 next to URL
+2. Change Camera from "Block" to "Allow"
+3. Refresh page
+
+STILL BLOCKED?
+
+1. Chrome menu (⋮) → Settings
+2. Privacy and security → Site Settings  
+3. Camera → Find "${window.location.hostname}" in Block list
+4. Click and change to "Allow"
+5. Refresh page
+
+Copy this guide to help fix the issue!`;
+              
+              navigator.clipboard.writeText(fixGuide);
+              toast.success("📋 Chrome camera fix guide copied to clipboard!");
+            },
+          },
+        });
+      } else {
+        toast.error("Please allow camera access in your browser settings");
+      }
       return null;
     }
   };
