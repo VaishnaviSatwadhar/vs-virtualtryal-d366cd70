@@ -190,23 +190,40 @@ If problems persist, try:
       });
       
       console.log("Camera stream obtained:", stream);
-      setStream(stream);
+      console.log("Active tracks:", stream.getVideoTracks());
+      
       setHasPermission(true);
+      setStream(stream);
+      
+      // Wait a tick for state to update
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Ensure video element receives the stream
       if (videoRef.current) {
+        console.log("Assigning stream to video element...");
         videoRef.current.srcObject = stream;
-        console.log("Stream assigned to video element");
         
-        // Force video to play
-        try {
-          await videoRef.current.play();
-          console.log("Video is now playing");
-          toast.success("🎉 Camera is live! Your face is now visible!");
-        } catch (playError) {
-          console.error("Video play error:", playError);
-          toast.error("Video playback failed - try refreshing the page");
-        }
+        // Set video attributes explicitly
+        videoRef.current.autoplay = true;
+        videoRef.current.playsInline = true;
+        videoRef.current.muted = true;
+        
+        console.log("Video element ready state:", videoRef.current.readyState);
+        
+        // Wait for video metadata to load
+        videoRef.current.onloadedmetadata = async () => {
+          console.log("Video metadata loaded");
+          try {
+            await videoRef.current!.play();
+            console.log("✅ Video is now playing!");
+            toast.success("🎉 Camera is live! Your face is now visible!");
+          } catch (playError) {
+            console.error("Video play error:", playError);
+            toast.error("Video playback failed - try refreshing the page");
+          }
+        };
+      } else {
+        console.error("Video ref is not available!");
       }
       return stream;
     } catch (err: any) {
@@ -542,37 +559,25 @@ Copy this guide to help fix the issue!`;
             <Card className="bg-gradient-card border-border p-6 relative overflow-hidden">
               <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
                 {/* Live Camera Feed - Your Face Display */}
-                {isActive && stream ? (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className={`w-full h-full object-cover rounded-lg ${
-                      cameraSettings.mirrorMode ? 'scale-x-[-1]' : ''
-                    }`}
-                    style={{ 
-                      filter: `brightness(${cameraSettings.brightnessBoost ? '1.2' : '1'}) contrast(${cameraSettings.brightnessBoost ? '1.1' : '1'}) saturate(1.1)`,
-                      background: '#000',
-                      minHeight: '100%'
-                    }}
-                    onLoadedMetadata={() => {
-                      if (videoRef.current) {
-                        videoRef.current.play().then(() => {
-                          toast.success("🎉 Your live face is now on screen!");
-                          if (cameraSettings.faceDetection) {
-                            setTimeout(() => {
-                              if (!isDetecting) setIsDetecting(true);
-                            }, 300);
-                          }
-                        });
-                      }
-                    }}
-                    onPlaying={() => {
-                      toast.success("📹 Live! Your face is clearly visible");
-                    }}
-                  />
-                ) : null}
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`w-full h-full object-cover rounded-lg ${
+                    cameraSettings.mirrorMode ? 'scale-x-[-1]' : ''
+                  } ${stream ? 'block' : 'hidden'}`}
+                  style={{ 
+                    filter: `brightness(${cameraSettings.brightnessBoost ? '1.2' : '1'}) contrast(${cameraSettings.brightnessBoost ? '1.1' : '1'}) saturate(1.1)`,
+                    background: '#000',
+                    minHeight: '100%',
+                    display: stream ? 'block' : 'none'
+                  }}
+                  onPlaying={() => {
+                    console.log("📹 Video is playing!");
+                    toast.success("📹 Live! Your face is clearly visible");
+                  }}
+                />
                 
                 {/* Camera Permission Status */}
                 {hasPermission === false && (
