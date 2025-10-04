@@ -180,7 +180,21 @@ If problems persist, try:
   const requestCameraAccess = async () => {
     try {
       console.log("Requesting camera access...");
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      
+      // First, stop any existing streams to free up the camera
+      if (stream) {
+        console.log("Stopping existing camera stream...");
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log("Stopped track:", track.label);
+        });
+        setStream(null);
+      }
+      
+      // Wait a moment to ensure camera is released
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const newStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { min: 640, ideal: 1280, max: 1920 },
           height: { min: 480, ideal: 720, max: 1080 },
@@ -189,11 +203,11 @@ If problems persist, try:
         audio: false 
       });
       
-      console.log("Camera stream obtained:", stream);
-      console.log("Active tracks:", stream.getVideoTracks());
+      console.log("✅ Camera stream obtained:", newStream);
+      console.log("Active tracks:", newStream.getVideoTracks());
       
       setHasPermission(true);
-      setStream(stream);
+      setStream(newStream);
       
       // Wait a tick for state to update
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -201,7 +215,7 @@ If problems persist, try:
       // Ensure video element receives the stream
       if (videoRef.current) {
         console.log("Assigning stream to video element...");
-        videoRef.current.srcObject = stream;
+        videoRef.current.srcObject = newStream;
         
         // Set video attributes explicitly
         videoRef.current.autoplay = true;
@@ -225,7 +239,7 @@ If problems persist, try:
       } else {
         console.error("Video ref is not available!");
       }
-      return stream;
+      return newStream;
     } catch (err: any) {
       console.error("Error accessing camera:", err);
       setHasPermission(false);
@@ -264,8 +278,43 @@ Copy this guide to help fix the issue!`;
             },
           },
         });
+      } else if (err.name === 'NotReadableError') {
+        toast.error("📹 Camera Already in Use", {
+          description: "Please close other tabs/apps using your camera, then try again",
+          duration: 8000,
+          action: {
+            label: "How to Fix",
+            onClick: () => {
+              const fixGuide = `🔧 CAMERA IN USE FIX:
+
+The camera is already being used by another application or browser tab.
+
+QUICK FIX:
+1. Close other browser tabs using the camera
+2. Close apps like Zoom, Skype, Teams, etc.
+3. Refresh this page and try again
+
+STILL NOT WORKING?
+
+Windows:
+1. Open Task Manager (Ctrl+Shift+Esc)
+2. End any camera-using processes
+3. Try again
+
+Mac:
+1. System Settings → Privacy & Security → Camera
+2. Check which apps have camera access
+3. Quit those apps and try again
+
+The camera can only be used by one application at a time!`;
+              
+              navigator.clipboard.writeText(fixGuide);
+              toast.success("📋 Camera troubleshooting guide copied!");
+            },
+          },
+        });
       } else {
-        toast.error("Please allow camera access in your browser settings");
+        toast.error("Camera access failed: " + (err.message || "Unknown error"));
       }
       return null;
     }
@@ -510,6 +559,12 @@ Copy this guide to help fix the issue!`;
   }, [isActive, isDetecting, cameraSettings.faceDetection]);
 
   const handleStartTrial = async () => {
+    // Prevent multiple simultaneous camera access attempts
+    if (stream) {
+      toast.info("Camera is already active!");
+      return;
+    }
+    
     // Clear any existing error messages
     toast.dismiss();
     
