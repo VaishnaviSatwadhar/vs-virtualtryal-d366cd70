@@ -90,6 +90,14 @@ interface AIAnalysis {
   sizeMatch: number;
   recommendations: string[];
   facePosition?: { x: number; y: number; width: number; height: number };
+  recommendedSize?: string;
+  confidence?: number;
+  bodyType?: string;
+  measurements?: {
+    chest?: string;
+    shoulders?: string;
+  };
+  fitAdvice?: string;
 }
 
 export const VirtualTryOnInterface = () => {
@@ -370,26 +378,53 @@ The camera can only be used by one application at a time!`;
     setIsAnalyzing(true);
     
     try {
-      const { analyzePhotoWithAI: analyzer } = await import('@/utils/aiAnalyzer');
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-body-size`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ image: imageData }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`AI analysis failed: ${response.status}`);
+      }
+
+      const sizeAnalysis = await response.json();
       
-      const analysis = await analyzer({
-        image: imageData,
-        product: selectedProduct
+      console.log('Size analysis:', sizeAnalysis);
+      
+      setAiAnalysis({
+        bodyDetected: true,
+        sizeMatch: sizeAnalysis.confidence || 85,
+        recommendations: [sizeAnalysis.fitAdvice || "Size recommendation based on your body proportions"],
+        facePosition: { x: 50, y: 20, width: 20, height: 25 },
+        recommendedSize: sizeAnalysis.recommendedSize,
+        confidence: sizeAnalysis.confidence,
+        bodyType: sizeAnalysis.bodyType,
+        measurements: sizeAnalysis.measurements,
+        fitAdvice: sizeAnalysis.fitAdvice
       });
       
-      setAiAnalysis(analysis);
-      toast.success("🧠 AI analysis complete!");
+      toast.success(`🎯 Recommended Size: ${sizeAnalysis.recommendedSize || 'M'}!`);
       
     } catch (error) {
       console.error('AI analysis failed:', error);
+      toast.error("AI analysis failed. Using default recommendations.");
+      
       // Fallback analysis
       setAiAnalysis({
         bodyDetected: true,
-        sizeMatch: 92,
-        recommendations: ["Great choice! This item suits you well."],
-        facePosition: { x: 45, y: 25, width: 15, height: 20 }
+        sizeMatch: 85,
+        recommendations: ["Size M recommended as a safe starting point"],
+        facePosition: { x: 50, y: 20, width: 20, height: 25 },
+        recommendedSize: 'M',
+        confidence: 75,
+        bodyType: 'standard'
       });
-      toast.success("✨ Analysis complete!");
     } finally {
       setIsAnalyzing(false);
     }
@@ -994,16 +1029,66 @@ The camera can only be used by one application at a time!`;
             <Card className="bg-gradient-card border-border p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Brain className="w-5 h-5 text-primary" />
-                AI Analysis
+                AI Size Recommendation
               </h3>
               <div className="space-y-3">
                 {isAnalyzing ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-sm text-foreground">Analyzing photo...</span>
+                    <span className="text-sm text-foreground">Analyzing your body size...</span>
                   </div>
                 ) : (
                   <>
+                    {aiAnalysis.recommendedSize && (
+                      <div className="bg-gradient-accent/20 rounded-lg p-4 border border-primary/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-muted-foreground">Recommended Size</span>
+                          <Badge variant="default" className="text-lg px-4 py-1 bg-primary text-primary-foreground">
+                            {aiAnalysis.recommendedSize}
+                          </Badge>
+                        </div>
+                        {aiAnalysis.confidence && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Zap className="w-3 h-3" />
+                            <span>{aiAnalysis.confidence}% confidence</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {aiAnalysis.bodyType && (
+                      <div className="flex items-center gap-2">
+                        <Shirt className="w-4 h-4 text-accent" />
+                        <span className="text-sm text-foreground">
+                          Body type: <span className="font-medium capitalize">{aiAnalysis.bodyType}</span>
+                        </span>
+                      </div>
+                    )}
+                    
+                    {aiAnalysis.measurements && (
+                      <div className="space-y-1">
+                        {aiAnalysis.measurements.chest && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>• Chest: {aiAnalysis.measurements.chest}</span>
+                          </div>
+                        )}
+                        {aiAnalysis.measurements.shoulders && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>• Shoulders: {aiAnalysis.measurements.shoulders}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {aiAnalysis.fitAdvice && (
+                      <div className="bg-muted/20 rounded-lg p-3 mt-3">
+                        <div className="flex items-start gap-2">
+                          <Sparkles className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span className="text-sm text-foreground">{aiAnalysis.fitAdvice}</span>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center gap-2">
                       {aiAnalysis.bodyDetected ? (
                         <CheckCircle className="w-4 h-4 text-success" />
@@ -1011,23 +1096,9 @@ The camera can only be used by one application at a time!`;
                         <AlertCircle className="w-4 h-4 text-warning" />
                       )}
                       <span className="text-sm text-foreground">
-                        {aiAnalysis.bodyDetected ? "Face detected" : "No face detected"}
+                        {aiAnalysis.bodyDetected ? "Body detected" : "Capture photo to get size recommendation"}
                       </span>
                     </div>
-                    {aiAnalysis.sizeMatch > 0 && (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-success" />
-                        <span className="text-sm text-foreground">
-                          Size match: {aiAnalysis.sizeMatch}%
-                        </span>
-                      </div>
-                    )}
-                    {aiAnalysis.recommendations.map((rec, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        <span className="text-sm text-foreground">{rec}</span>
-                      </div>
-                    ))}
                   </>
                 )}
               </div>

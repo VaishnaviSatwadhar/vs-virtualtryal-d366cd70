@@ -1,0 +1,4 @@
+project_id = "dkwhjdhnbwjszvciugzn"
+
+[functions.analyze-body-size]
+verify_jwt = false
