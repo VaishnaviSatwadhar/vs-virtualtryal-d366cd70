@@ -29,6 +29,7 @@ import * as poseDetection from '@tensorflow-models/pose-detection';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-cpu';
+import '@tensorflow/tfjs-backend-webgpu';
 
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
