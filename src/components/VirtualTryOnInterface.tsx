@@ -129,6 +129,7 @@ export const VirtualTryOnInterface = () => {
   });
   const [poseDetector, setPoseDetector] = useState<poseDetection.PoseDetector | null>(null);
   const [bodyLandmarks, setBodyLandmarks] = useState<any>(null);
+  const [manualSize, setManualSize] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -608,6 +609,7 @@ The camera can only be used by one application at a time!`;
     setCapturedImage(null);
     setVirtualTryOnOverlay(null);
     setBodyLandmarks(null);
+    setManualSize(null);
     setAiAnalysis({
       bodyDetected: false,
       sizeMatch: 0,
@@ -1222,6 +1224,64 @@ The camera can only be used by one application at a time!`;
                   </>
                 )}
               </div>
+            </Card>
+
+            {/* Manual Size Selection */}
+            <Card className="bg-gradient-card border-border p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Shirt className="w-5 h-5 text-accent" />
+                Choose Your Size
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select your preferred size manually or use AI recommendation above
+              </p>
+              <div className="grid grid-cols-5 gap-2">
+                {['XS', 'S', 'M', 'L', 'XL', 'XXL'].slice(0, 5).map((size) => (
+                  <Button
+                    key={size}
+                    variant={manualSize === size ? "default" : "outline"}
+                    className={`h-14 font-bold text-base transition-all ${
+                      manualSize === size 
+                        ? 'shadow-glow scale-105' 
+                        : 'hover:scale-105'
+                    }`}
+                    onClick={() => {
+                      setManualSize(size);
+                      toast.success(`Size ${size} selected!`);
+                    }}
+                  >
+                    {size}
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-border">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setManualSize('XXL');
+                    toast.success('Size XXL selected!');
+                  }}
+                >
+                  XXL
+                </Button>
+              </div>
+              {manualSize && (
+                <div className="mt-4 bg-gradient-accent/10 rounded-lg p-3 border border-accent/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Selected Size:</span>
+                    <Badge variant="default" className="text-base px-3 bg-accent text-accent-foreground">
+                      {manualSize}
+                    </Badge>
+                  </div>
+                  {aiAnalysis.recommendedSize && manualSize !== aiAnalysis.recommendedSize && (
+                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      AI recommends size {aiAnalysis.recommendedSize}
+                    </p>
+                  )}
+                </div>
+              )}
             </Card>
             
             {/* Captured Photos Gallery */}
