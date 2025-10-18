@@ -507,6 +507,8 @@ The camera can only be used by one application at a time!`;
     const keypoints = pose.keypoints;
     const leftShoulder = keypoints.find((kp: any) => kp.name === 'left_shoulder');
     const rightShoulder = keypoints.find((kp: any) => kp.name === 'right_shoulder');
+    const leftElbow = keypoints.find((kp: any) => kp.name === 'left_elbow');
+    const rightElbow = keypoints.find((kp: any) => kp.name === 'right_elbow');
     const leftHip = keypoints.find((kp: any) => kp.name === 'left_hip');
     const rightHip = keypoints.find((kp: any) => kp.name === 'right_hip');
     const nose = keypoints.find((kp: any) => kp.name === 'nose');
@@ -518,45 +520,156 @@ The camera can only be used by one application at a time!`;
       leftHip?.score > 0.3 && 
       rightHip?.score > 0.3
     ) {
-      // Calculate t-shirt dimensions based on body landmarks
+      // Calculate body measurements
       const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
-      const bodyHeight = Math.abs(leftHip.y - leftShoulder.y);
+      const bodyHeight = Math.abs((leftHip.y + rightHip.y) / 2 - (leftShoulder.y + rightShoulder.y) / 2);
+      const shoulderMidpoint = {
+        x: (leftShoulder.x + rightShoulder.x) / 2,
+        y: (leftShoulder.y + rightShoulder.y) / 2
+      };
       
-      // T-shirt positioning
-      const tshirtWidth = shoulderWidth * 1.4; // Slightly wider than shoulders
-      const tshirtHeight = bodyHeight * 1.3; // Cover torso
-      const tshirtX = leftShoulder.x - (tshirtWidth - shoulderWidth) / 2;
-      const tshirtY = (leftShoulder.y + rightShoulder.y) / 2 - tshirtHeight * 0.1;
+      // T-shirt dimensions with realistic fitting
+      const tshirtWidth = shoulderWidth * 1.5;
+      const tshirtHeight = bodyHeight * 1.4;
+      const necklineOffset = tshirtHeight * 0.08; // Neckline below shoulders
 
-      // Load and draw t-shirt
+      // Load and draw t-shirt with realistic effects
       const img = document.createElement('img') as HTMLImageElement;
       img.onload = () => {
         ctx.save();
-        ctx.globalAlpha = 0.75;
         
-        // Calculate rotation angle based on shoulder alignment
+        // Calculate body orientation
         const shoulderAngle = Math.atan2(
           rightShoulder.y - leftShoulder.y,
           rightShoulder.x - leftShoulder.x
         );
         
-        // Apply transformation
-        ctx.translate(tshirtX + tshirtWidth / 2, tshirtY + tshirtHeight / 2);
+        // Calculate depth perception (body facing camera or turned)
+        const bodyDepth = leftElbow && rightElbow ? 
+          Math.abs(leftElbow.x - rightElbow.x) / shoulderWidth : 1;
+        const depthScale = Math.max(0.7, Math.min(1, bodyDepth));
+        
+        // Position t-shirt
+        ctx.translate(shoulderMidpoint.x, shoulderMidpoint.y + necklineOffset);
         ctx.rotate(shoulderAngle);
-        ctx.drawImage(img, -tshirtWidth / 2, -tshirtHeight / 2, tshirtWidth, tshirtHeight);
+        
+        // Add shadow underneath for depth (cast shadow)
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 8;
+        ctx.shadowOffsetY = 8;
+        
+        // Create gradient for realistic fabric shading
+        const gradient = ctx.createLinearGradient(
+          -tshirtWidth / 2, -tshirtHeight / 2,
+          tshirtWidth / 2, tshirtHeight / 2
+        );
+        
+        // Draw t-shirt with perspective
+        ctx.globalAlpha = 0.85;
+        
+        // Apply slight perspective distortion
+        const perspectiveScale = depthScale * 0.95;
+        ctx.scale(perspectiveScale, 1);
+        
+        // Draw the t-shirt image
+        ctx.drawImage(
+          img, 
+          -tshirtWidth / 2, 
+          -tshirtHeight / 2, 
+          tshirtWidth, 
+          tshirtHeight
+        );
+        
+        // Reset scale for overlay effects
+        ctx.scale(1 / perspectiveScale, 1);
+        
+        // Add realistic fabric shadows and highlights
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // Add wrinkle/fold shadows for realism
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        
+        // Left shoulder fold
+        ctx.beginPath();
+        ctx.ellipse(-shoulderWidth * 0.35, -tshirtHeight * 0.3, shoulderWidth * 0.15, tshirtHeight * 0.1, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Right shoulder fold
+        ctx.beginPath();
+        ctx.ellipse(shoulderWidth * 0.35, -tshirtHeight * 0.3, shoulderWidth * 0.15, tshirtHeight * 0.1, -Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Torso center highlight (natural light reflection)
+        ctx.globalAlpha = 0.08;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, shoulderWidth * 0.25, tshirtHeight * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add subtle texture pattern
+        ctx.globalAlpha = 0.03;
+        for (let i = 0; i < 15; i++) {
+          const randomX = (Math.random() - 0.5) * tshirtWidth * 0.8;
+          const randomY = (Math.random() - 0.5) * tshirtHeight * 0.8;
+          ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)';
+          ctx.fillRect(randomX, randomY, 2, 2);
+        }
+        
         ctx.restore();
 
-        // Draw body landmarks for debugging
+        // Draw body landmarks for debugging (optional)
         if (cameraSettings.faceDetection) {
           keypoints.forEach((kp: any) => {
             if (kp.score > 0.3) {
               ctx.beginPath();
-              ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI);
+              ctx.arc(kp.x, kp.y, 4, 0, 2 * Math.PI);
               ctx.fillStyle = kp.name.includes('shoulder') || kp.name.includes('hip') ? 
-                'rgba(0, 255, 0, 0.8)' : 'rgba(0, 150, 255, 0.6)';
+                'rgba(0, 255, 0, 0.7)' : 
+                kp.name.includes('elbow') ? 'rgba(255, 200, 0, 0.7)' :
+                'rgba(0, 150, 255, 0.5)';
               ctx.fill();
+              
+              // Draw keypoint labels
+              ctx.font = '10px Arial';
+              ctx.fillStyle = 'white';
+              ctx.fillText(kp.name.split('_')[1], kp.x + 8, kp.y);
             }
           });
+          
+          // Draw skeleton connections for better visualization
+          ctx.strokeStyle = 'rgba(0, 255, 0, 0.4)';
+          ctx.lineWidth = 2;
+          
+          // Torso connections
+          if (leftShoulder && rightShoulder) {
+            ctx.beginPath();
+            ctx.moveTo(leftShoulder.x, leftShoulder.y);
+            ctx.lineTo(rightShoulder.x, rightShoulder.y);
+            ctx.stroke();
+          }
+          if (leftShoulder && leftHip) {
+            ctx.beginPath();
+            ctx.moveTo(leftShoulder.x, leftShoulder.y);
+            ctx.lineTo(leftHip.x, leftHip.y);
+            ctx.stroke();
+          }
+          if (rightShoulder && rightHip) {
+            ctx.beginPath();
+            ctx.moveTo(rightShoulder.x, rightShoulder.y);
+            ctx.lineTo(rightHip.x, rightHip.y);
+            ctx.stroke();
+          }
+          if (leftHip && rightHip) {
+            ctx.beginPath();
+            ctx.moveTo(leftHip.x, leftHip.y);
+            ctx.lineTo(rightHip.x, rightHip.y);
+            ctx.stroke();
+          }
         }
       };
       img.src = selectedProduct.image;
