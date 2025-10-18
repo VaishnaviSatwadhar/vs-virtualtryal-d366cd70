@@ -25,6 +25,8 @@ import {
 import { toast } from "sonner";
 import { analyzePhotoWithAI } from "@/utils/aiAnalyzer";
 import cameraInterfaceImage from "@/assets/camera-interface.jpg";
+import * as poseDetection from '@tensorflow-models/pose-detection';
+import * as tf from '@tensorflow/tfjs';
 
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
@@ -125,9 +127,12 @@ export const VirtualTryOnInterface = () => {
     autoFocus: true,
     highQuality: false
   });
+  const [poseDetector, setPoseDetector] = useState<poseDetection.PoseDetector | null>(null);
+  const [bodyLandmarks, setBodyLandmarks] = useState<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Enhanced Camera functions with proper permission handling
   const checkCameraPermissions = async () => {
@@ -430,59 +435,156 @@ The camera can only be used by one application at a time!`;
     }
   };
 
+  // Initialize TensorFlow.js and PoseNet model
+  useEffect(() => {
+    const loadPoseDetector = async () => {
+      try {
+        await tf.ready();
+        console.log('TensorFlow.js loaded');
+        
+        const detectorConfig = {
+          modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        };
+        
+        const detector = await poseDetection.createDetector(
+          poseDetection.SupportedModels.MoveNet,
+          detectorConfig
+        );
+        
+        setPoseDetector(detector);
+        toast.success("🤖 ML body tracking initialized!");
+      } catch (error) {
+        console.error('Failed to load pose detector:', error);
+        toast.error("ML model failed to load, using basic tracking");
+      }
+    };
+    
+    loadPoseDetector();
+  }, []);
+
+  // Real-time pose detection and overlay rendering
+  const detectPoseAndRender = async () => {
+    if (!videoRef.current || !poseDetector || !overlayCanvasRef.current || !virtualTryOnOverlay) {
+      return;
+    }
+
+    try {
+      const video = videoRef.current;
+      const poses = await poseDetector.estimatePoses(video);
+      
+      if (poses && poses.length > 0) {
+        const pose = poses[0];
+        setBodyLandmarks(pose);
+        
+        // Draw overlay based on detected body landmarks
+        renderClothingOverlay(pose);
+      }
+    } catch (error) {
+      console.error('Pose detection error:', error);
+    }
+
+    animationFrameRef.current = requestAnimationFrame(detectPoseAndRender);
+  };
+
+  const renderClothingOverlay = (pose: any) => {
+    if (!overlayCanvasRef.current || !videoRef.current) return;
+
+    const canvas = overlayCanvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Get key body landmarks
+    const keypoints = pose.keypoints;
+    const leftShoulder = keypoints.find((kp: any) => kp.name === 'left_shoulder');
+    const rightShoulder = keypoints.find((kp: any) => kp.name === 'right_shoulder');
+    const leftHip = keypoints.find((kp: any) => kp.name === 'left_hip');
+    const rightHip = keypoints.find((kp: any) => kp.name === 'right_hip');
+    const nose = keypoints.find((kp: any) => kp.name === 'nose');
+
+    // Only render if we have good confidence on key points
+    if (
+      leftShoulder?.score > 0.3 && 
+      rightShoulder?.score > 0.3 && 
+      leftHip?.score > 0.3 && 
+      rightHip?.score > 0.3
+    ) {
+      // Calculate t-shirt dimensions based on body landmarks
+      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+      const bodyHeight = Math.abs(leftHip.y - leftShoulder.y);
+      
+      // T-shirt positioning
+      const tshirtWidth = shoulderWidth * 1.4; // Slightly wider than shoulders
+      const tshirtHeight = bodyHeight * 1.3; // Cover torso
+      const tshirtX = leftShoulder.x - (tshirtWidth - shoulderWidth) / 2;
+      const tshirtY = (leftShoulder.y + rightShoulder.y) / 2 - tshirtHeight * 0.1;
+
+      // Load and draw t-shirt
+      const img = document.createElement('img') as HTMLImageElement;
+      img.onload = () => {
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+        
+        // Calculate rotation angle based on shoulder alignment
+        const shoulderAngle = Math.atan2(
+          rightShoulder.y - leftShoulder.y,
+          rightShoulder.x - leftShoulder.x
+        );
+        
+        // Apply transformation
+        ctx.translate(tshirtX + tshirtWidth / 2, tshirtY + tshirtHeight / 2);
+        ctx.rotate(shoulderAngle);
+        ctx.drawImage(img, -tshirtWidth / 2, -tshirtHeight / 2, tshirtWidth, tshirtHeight);
+        ctx.restore();
+
+        // Draw body landmarks for debugging
+        if (cameraSettings.faceDetection) {
+          keypoints.forEach((kp: any) => {
+            if (kp.score > 0.3) {
+              ctx.beginPath();
+              ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI);
+              ctx.fillStyle = kp.name.includes('shoulder') || kp.name.includes('hip') ? 
+                'rgba(0, 255, 0, 0.8)' : 'rgba(0, 150, 255, 0.6)';
+              ctx.fill();
+            }
+          });
+        }
+      };
+      img.src = selectedProduct.image;
+    }
+  };
+
   const generateVirtualTryOn = async () => {
     if (!videoRef.current) {
       toast.error("Camera not active!");
       return;
     }
+
+    if (!poseDetector) {
+      toast.error("ML model not loaded yet!");
+      return;
+    }
     
     setIsGeneratingTryOn(true);
-    toast.info("🎨 Applying t-shirt to your body...");
+    toast.info("🎨 Applying t-shirt with ML tracking...");
     
     try {
-      if (overlayCanvasRef.current && videoRef.current) {
-        const canvas = overlayCanvasRef.current;
-        const video = videoRef.current;
-        const ctx = canvas.getContext('2d');
-        
-        if (ctx) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          
-          // Clear previous overlay
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
-          // Load t-shirt image
-          const img = document.createElement('img') as HTMLImageElement;
-          img.onload = () => {
-            // Calculate body position based on video dimensions
-            // Assume face is in upper 30% of frame, body is below
-            const bodyTopY = canvas.height * 0.25; // Start t-shirt at 25% down
-            const bodyWidth = canvas.width * 0.45; // T-shirt takes 45% of width
-            const bodyHeight = canvas.height * 0.5; // T-shirt extends 50% down
-            const centerX = canvas.width / 2;
-            const bodyX = centerX - (bodyWidth / 2);
-            
-            // Draw t-shirt with transparency
-            ctx.globalAlpha = 0.75;
-            ctx.drawImage(img, bodyX, bodyTopY, bodyWidth, bodyHeight);
-            
-            const overlayData = canvas.toDataURL('image/png');
-            setVirtualTryOnOverlay(overlayData);
-            setIsGeneratingTryOn(false);
-            toast.success("✨ T-shirt applied! Move to see the fit!");
-          };
-          img.onerror = () => {
-            setIsGeneratingTryOn(false);
-            toast.error("Failed to load t-shirt image");
-          };
-          img.src = selectedProduct.image;
-        } else {
-          setIsGeneratingTryOn(false);
-        }
-      } else {
-        setIsGeneratingTryOn(false);
+      // Set initial overlay to trigger rendering
+      setVirtualTryOnOverlay(selectedProduct.image);
+      
+      // Start continuous pose detection and rendering
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
+      detectPoseAndRender();
+      
+      setIsGeneratingTryOn(false);
+      toast.success("✨ ML-tracked t-shirt applied! Move around!");
     } catch (error) {
       console.error('Virtual try-on failed:', error);
       toast.error("Failed to generate virtual try-on");
@@ -490,10 +592,13 @@ The camera can only be used by one application at a time!`;
     }
   };
 
-  // Cleanup camera on unmount
+  // Cleanup camera and animation on unmount
   useEffect(() => {
     return () => {
       stopCamera();
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, []);
 
@@ -502,11 +607,26 @@ The camera can only be used by one application at a time!`;
     setDetectionPoints([]);
     setCapturedImage(null);
     setVirtualTryOnOverlay(null);
+    setBodyLandmarks(null);
     setAiAnalysis({
       bodyDetected: false,
       sizeMatch: 0,
       recommendations: []
     });
+    
+    // Stop pose detection animation
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    // Clear overlay canvas
+    if (overlayCanvasRef.current) {
+      const ctx = overlayCanvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+      }
+    }
   };
 
   const handleSave = () => {
