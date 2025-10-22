@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, Download, Sparkles, Loader2 } from "lucide-react";
+import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Input } from "./ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +27,9 @@ export const VirtualTryOnInterface = () => {
   const [backgroundType, setBackgroundType] = useState<string>("original");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +96,56 @@ export const VirtualTryOnInterface = () => {
         toast.success("Photo uploaded! Now select a clothing item.");
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const loadImageFromUrl = async () => {
+    if (!imageUrl.trim()) {
+      toast.error("Please enter a valid image URL");
+      return;
+    }
+
+    setIsLoadingUrl(true);
+    try {
+      // Validate URL format
+      const url = new URL(imageUrl);
+      
+      // Fetch the image
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch image");
+      }
+
+      const blob = await response.blob();
+      
+      // Check if it's an image
+      if (!blob.type.startsWith('image/')) {
+        throw new Error("URL does not point to an image");
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUserImage(reader.result as string);
+        setTryonResult(null);
+        setShowUrlInput(false);
+        setImageUrl("");
+        toast.success("Image loaded from URL! Now select a clothing item.");
+      };
+      reader.readAsDataURL(blob);
+    } catch (error: any) {
+      console.error('URL load error:', error);
+      if (error.message.includes("Failed to fetch")) {
+        toast.error("Unable to load image. The URL may be blocked by CORS policy. Try uploading the image instead.");
+      } else if (error.message.includes("Invalid URL")) {
+        toast.error("Invalid URL format. Please enter a valid image URL.");
+      } else if (error.message.includes("not point to an image")) {
+        toast.error("The URL doesn't point to an image file.");
+      } else {
+        toast.error("Failed to load image from URL. Try uploading instead.");
+      }
+    } finally {
+      setIsLoadingUrl(false);
     }
   };
 
@@ -184,7 +238,7 @@ export const VirtualTryOnInterface = () => {
               <h3 className="text-xl font-semibold">Your Photo</h3>
             </div>
             
-            {!showCamera && !userImage && (
+            {!showCamera && !userImage && !showUrlInput && (
               <div className="space-y-4">
                 <Button 
                   onClick={startCamera}
@@ -220,9 +274,82 @@ export const VirtualTryOnInterface = () => {
                   onChange={handleFileUpload}
                   className="hidden"
                 />
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => setShowUrlInput(true)}
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                >
+                  <LinkIcon className="mr-2 h-5 w-5" />
+                  Load from URL
+                </Button>
+
                 <p className="text-xs text-muted-foreground text-center">
                   Best results with full-body or upper-body photos
                 </p>
+              </div>
+            )}
+
+            {showUrlInput && !userImage && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Image URL</label>
+                  <Input
+                    type="url"
+                    placeholder="https://example.com/image.jpg"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        loadImageFromUrl();
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter a direct link to an image file (JPG, PNG, etc.)
+                  </p>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={loadImageFromUrl}
+                    disabled={isLoadingUrl || !imageUrl.trim()}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    {isLoadingUrl ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <LinkIcon className="mr-2 h-5 w-5" />
+                        Load Image
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setShowUrlInput(false);
+                      setImageUrl("");
+                    }}
+                    variant="outline"
+                    size="lg"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
 
