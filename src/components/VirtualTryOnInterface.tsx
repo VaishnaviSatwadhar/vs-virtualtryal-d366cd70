@@ -355,12 +355,22 @@ export const VirtualTryOnInterface = () => {
 
             {showCamera && (
               <div className="space-y-4">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-lg"
-                />
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full rounded-lg bg-muted aspect-[3/4] object-cover"
+                  />
+                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pulse">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                    LIVE
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Position yourself in frame and click Capture
+                </p>
                 <div className="flex gap-2">
                   <Button 
                     onClick={capturePhoto}
@@ -368,7 +378,7 @@ export const VirtualTryOnInterface = () => {
                     size="lg"
                   >
                     <Camera className="mr-2 h-5 w-5" />
-                    Capture
+                    Capture Photo
                   </Button>
                   <Button 
                     onClick={stopCamera}
