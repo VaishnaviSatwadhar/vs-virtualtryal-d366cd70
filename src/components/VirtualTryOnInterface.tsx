@@ -30,6 +30,7 @@ export const VirtualTryOnInterface = () => {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,15 +49,28 @@ export const VirtualTryOnInterface = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'user', width: 1280, height: 720 } 
       });
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          setIsCameraReady(true);
+          toast.success("Camera ready!");
+        };
       }
+      
       streamRef.current = stream;
       setShowCamera(true);
-      toast.success("Camera ready!");
-    } catch (error) {
-      toast.error("Failed to access camera");
-      console.error(error);
+    } catch (error: any) {
+      console.error('Camera error:', error);
+      if (error.name === 'NotAllowedError') {
+        toast.error("Camera access denied. Please allow camera permissions.");
+      } else if (error.name === 'NotFoundError') {
+        toast.error("No camera found on your device.");
+      } else {
+        toast.error("Failed to access camera. Please try again.");
+      }
     }
   };
 
@@ -66,23 +80,47 @@ export const VirtualTryOnInterface = () => {
       streamRef.current = null;
     }
     setShowCamera(false);
+    setIsCameraReady(false);
   };
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
+    if (!videoRef.current || !canvasRef.current) {
+      toast.error("Camera not ready. Please try again.");
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    // Check if video is actually playing
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      toast.error("Video not ready. Please wait a moment.");
+      return;
+    }
+
+    try {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      
       const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+      if (!ctx) {
+        throw new Error("Could not get canvas context");
+      }
+
+      ctx.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL('image/jpeg', 0.9);
+      
+      if (imageData && imageData !== 'data:,') {
         setUserImage(imageData);
         setTryonResult(null);
         stopCamera();
         toast.success("Photo captured! Now select a clothing item.");
+      } else {
+        throw new Error("Failed to capture image data");
       }
+    } catch (error) {
+      console.error('Capture error:', error);
+      toast.error("Failed to capture photo. Please try again.");
     }
   };
 
@@ -374,11 +412,12 @@ export const VirtualTryOnInterface = () => {
                 <div className="flex gap-2">
                   <Button 
                     onClick={capturePhoto}
+                    disabled={!isCameraReady}
                     className="flex-1"
                     size="lg"
                   >
                     <Camera className="mr-2 h-5 w-5" />
-                    Capture Photo
+                    {isCameraReady ? 'Capture Photo' : 'Loading...'}
                   </Button>
                   <Button 
                     onClick={stopCamera}
