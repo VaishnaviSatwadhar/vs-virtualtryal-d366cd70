@@ -12,6 +12,22 @@ import blackTshirt from "@/assets/products/black-tshirt.jpg";
 import whiteHoodie from "@/assets/products/white-hoodie.jpg";
 import denimJacket from "@/assets/products/denim-jacket.jpg";
 import redDress from "@/assets/products/red-dress.jpg";
+import silverWatch from "@/assets/products/silver-watch.jpg";
+import goldSmartwatch from "@/assets/products/gold-smartwatch.jpg";
+import leatherHandbag from "@/assets/products/leather-handbag.jpg";
+import goldNecklace from "@/assets/products/gold-necklace.jpg";
+import blackSunglasses from "@/assets/products/black-sunglasses.jpg";
+import whiteSneakers from "@/assets/products/white-sneakers.jpg";
+import leatherBelt from "@/assets/products/leather-belt.jpg";
+import baseballCap from "@/assets/products/baseball-cap.jpg";
+import pearlEarrings from "@/assets/products/pearl-earrings.jpg";
+import silkScarf from "@/assets/products/silk-scarf.jpg";
+import blueJeans from "@/assets/products/blue-jeans.jpg";
+import greenJacket from "@/assets/products/green-jacket.jpg";
+import diamondRing from "@/assets/products/diamond-ring.jpg";
+import silverBracelet from "@/assets/products/silver-bracelet.jpg";
+import yellowDress from "@/assets/products/yellow-dress.jpg";
+import blackBoots from "@/assets/products/black-boots.jpg";
 
 interface Product {
   name: string;
@@ -40,12 +56,31 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Sample products
+  // All available products for try-on
   const products: Product[] = [
-    { name: "Black T-Shirt", image: blackTshirt, brand: "Fashion Co", price: 29.99 },
-    { name: "White Hoodie", image: whiteHoodie, brand: "Urban Wear", price: 49.99 },
-    { name: "Denim Jacket", image: denimJacket, brand: "Classic Denim", price: 79.99 },
-    { name: "Red Dress", image: redDress, brand: "Elegant Style", price: 89.99 },
+    // Clothing
+    { name: "Black T-Shirt", image: blackTshirt, brand: "StyleCorp", price: 29.99 },
+    { name: "White Hoodie", image: whiteHoodie, brand: "ComfortWear", price: 49.99 },
+    { name: "Denim Jacket", image: denimJacket, brand: "UrbanStyle", price: 79.99 },
+    { name: "Red Dress", image: redDress, brand: "ChicStyle", price: 89.99 },
+    { name: "Blue Jeans", image: blueJeans, brand: "DenimCo", price: 59.99 },
+    { name: "Green Jacket", image: greenJacket, brand: "UrbanStyle", price: 149.99 },
+    { name: "Yellow Dress", image: yellowDress, brand: "SummerVibes", price: 79.99 },
+    
+    // Accessories & Jewelry
+    { name: "Silver Watch", image: silverWatch, brand: "TechWear", price: 199.99 },
+    { name: "Gold Smartwatch", image: goldSmartwatch, brand: "DigitalLux", price: 299.99 },
+    { name: "Gold Necklace", image: goldNecklace, brand: "JewelCraft", price: 79.99 },
+    { name: "Pearl Earrings", image: pearlEarrings, brand: "EleganceJewels", price: 45.99 },
+    { name: "Diamond Ring", image: diamondRing, brand: "LuxeJewelry", price: 299.99 },
+    { name: "Silver Bracelet", image: silverBracelet, brand: "EleganceJewels", price: 49.99 },
+    { name: "Black Sunglasses", image: blackSunglasses, brand: "SunStyle", price: 59.99 },
+    { name: "Baseball Cap", image: baseballCap, brand: "UrbanCap", price: 24.99 },
+    { name: "Silk Scarf", image: silkScarf, brand: "LuxeAccessories", price: 32.99 },
+    { name: "Leather Belt", image: leatherBelt, brand: "ClassicWear", price: 39.99 },
+    { name: "Leather Handbag", image: leatherHandbag, brand: "LuxeBags", price: 149.99 },
+    { name: "White Sneakers", image: whiteSneakers, brand: "SportLux", price: 89.99 },
+    { name: "Black Boots", image: blackBoots, brand: "FootwearLux", price: 129.99 },
   ];
 
   // Auto-select product when passed from gallery
@@ -478,7 +513,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2">
                 {products.map((product) => (
                   <button
                     key={product.name}
