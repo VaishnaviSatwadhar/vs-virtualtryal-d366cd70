@@ -8,6 +8,7 @@ import { StyleRecommendations } from "@/components/StyleRecommendations";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedProductForTryOn, setSelectedProductForTryOn] = useState<{ name: string; image: string } | null>(null);
 
   const handleStartTrial = () => {
     // Auto-scroll to virtual trial interface
@@ -27,6 +28,15 @@ const Index = () => {
     }, 100);
   };
 
+  const handleProductTryOn = (productName: string, productImage: string) => {
+    setSelectedProductForTryOn({ name: productName, image: productImage });
+    setTimeout(() => {
+      document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
+        behavior: 'smooth' 
+      });
+    }, 100);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <VirtualTryOnHero onStartTrial={handleStartTrial} />
@@ -35,8 +45,11 @@ const Index = () => {
         onSelectCategory={setSelectedCategory}
         onContinueToTrial={handleContinueToTrial}
       />
-      <VirtualTryOnInterface />
-      <ProductGallery selectedCategory={selectedCategory || undefined} />
+      <VirtualTryOnInterface selectedProduct={selectedProductForTryOn} />
+      <ProductGallery 
+        selectedCategory={selectedCategory || undefined}
+        onProductTryOn={handleProductTryOn}
+      />
       <StyleRecommendations />
       <Toaster />
     </div>

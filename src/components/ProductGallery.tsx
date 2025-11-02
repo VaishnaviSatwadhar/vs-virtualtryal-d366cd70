@@ -311,9 +311,10 @@ const categoryIcons = {
 
 interface ProductGalleryProps {
   selectedCategory?: string;
+  onProductTryOn?: (productName: string, productImage: string) => void;
 }
 
-export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
+export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGalleryProps) => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [cart, setCart] = useState<string[]>([]);
@@ -328,12 +329,11 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
     // Open search modal or focus search input
   };
 
-  const handleTryOn = (productName: string) => {
-    toast.success(`Starting virtual try-on for ${productName}`);
-    // Navigate to virtual try-on interface with this product
-    document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
-      behavior: 'smooth' 
-    });
+  const handleTryOn = (product: Product) => {
+    toast.success(`Starting virtual try-on for ${product.name}`);
+    if (onProductTryOn) {
+      onProductTryOn(product.name, product.image);
+    }
   };
 
   const handleAddToCart = (productId: string, productName: string) => {
@@ -438,7 +438,7 @@ export const ProductGallery = ({ selectedCategory }: ProductGalleryProps) => {
 
                 {/* Hover Actions */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button variant="glow" size="sm" onClick={() => handleTryOn(product.name)}>
+                  <Button variant="glow" size="sm" onClick={() => handleTryOn(product)}>
                     <Eye className="w-4 h-4" />
                     Try On
                   </Button>

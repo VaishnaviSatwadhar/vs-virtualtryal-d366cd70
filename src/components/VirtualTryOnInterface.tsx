@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -20,7 +20,11 @@ interface Product {
   price: number;
 }
 
-export const VirtualTryOnInterface = () => {
+interface VirtualTryOnInterfaceProps {
+  selectedProduct?: { name: string; image: string } | null;
+}
+
+export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: VirtualTryOnInterfaceProps) => {
   const [userImage, setUserImage] = useState<string | null>(null);
   const [tryonResult, setTryonResult] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -43,6 +47,21 @@ export const VirtualTryOnInterface = () => {
     { name: "Denim Jacket", image: denimJacket, brand: "Classic Denim", price: 79.99 },
     { name: "Red Dress", image: redDress, brand: "Elegant Style", price: 89.99 },
   ];
+
+  // Auto-select product when passed from gallery
+  useEffect(() => {
+    if (selectedProductProp) {
+      const product: Product = {
+        name: selectedProductProp.name,
+        image: selectedProductProp.image,
+        brand: "Gallery Item",
+        price: 0
+      };
+      setSelectedProduct(product);
+      setTryonResult(null);
+      toast.success(`${selectedProductProp.name} selected for try-on!`);
+    }
+  }, [selectedProductProp]);
 
   const startCamera = async () => {
     try {
