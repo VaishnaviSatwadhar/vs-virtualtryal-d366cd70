@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon } from "lucide-react";
+import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,6 +45,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const [userImage, setUserImage] = useState<string | null>(null);
   const [tryonResult, setTryonResult] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [myProducts, setMyProducts] = useState<Product[]>([]); // User's selected products
+  const [showGallery, setShowGallery] = useState(false);
   const [backgroundType, setBackgroundType] = useState<string>("original");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
@@ -92,11 +95,38 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         brand: "Gallery Item",
         price: 0
       };
+      // Add to user's products if not already there
+      setMyProducts(prev => {
+        const exists = prev.some(p => p.name === product.name);
+        if (!exists) {
+          return [...prev, product];
+        }
+        return prev;
+      });
       setSelectedProduct(product);
       setTryonResult(null);
-      toast.success(`${selectedProductProp.name} selected for try-on!`);
+      toast.success(`${selectedProductProp.name} added to your selection!`);
     }
   }, [selectedProductProp]);
+
+  const addProductToMyList = (product: Product) => {
+    const exists = myProducts.some(p => p.name === product.name);
+    if (exists) {
+      toast.info(`${product.name} is already in your selection`);
+      return;
+    }
+    setMyProducts(prev => [...prev, product]);
+    toast.success(`${product.name} added to your selection!`);
+  };
+
+  const removeProductFromMyList = (productName: string) => {
+    setMyProducts(prev => prev.filter(p => p.name !== productName));
+    if (selectedProduct?.name === productName) {
+      setSelectedProduct(null);
+      setTryonResult(null);
+    }
+    toast.success(`Product removed from your selection`);
+  };
 
   const startCamera = async () => {
     try {
@@ -507,38 +537,112 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
           {/* Step 2: Select Clothing */}
           <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-              <h3 className="text-xl font-semibold">Select Clothing</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
+                <h3 className="text-xl font-semibold">My Products</h3>
+              </div>
+              <Button
+                onClick={() => setShowGallery(!showGallery)}
+                variant={showGallery ? "default" : "outline"}
+                size="sm"
+              >
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                {showGallery ? 'Hide Gallery' : 'Browse Gallery'}
+              </Button>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2">
-                {products.map((product) => (
-                  <button
-                    key={product.name}
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setTryonResult(null);
-                      toast.success(`Selected: ${product.name}`);
-                    }}
-                    className={`p-2 rounded-lg border-2 transition-all ${
-                      selectedProduct?.name === product.name
-                        ? 'border-primary ring-2 ring-primary/20'
-                        : 'border-muted hover:border-primary/50'
-                    }`}
-                  >
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      className="w-full h-32 object-cover rounded-md mb-2"
-                    />
-                    <p className="text-sm font-medium truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">${product.price}</p>
-                  </button>
-                ))}
+            {/* Gallery View */}
+            {showGallery && (
+              <div className="mb-4 p-4 border rounded-lg bg-muted/20">
+                <h4 className="text-sm font-semibold mb-3">Product Gallery</h4>
+                <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
+                  {products.map((product) => {
+                    const isAdded = myProducts.some(p => p.name === product.name);
+                    return (
+                      <div
+                        key={product.name}
+                        className="relative p-2 rounded-lg border bg-background"
+                      >
+                        <img 
+                          src={product.image} 
+                          alt={product.name}
+                          className="w-full h-24 object-cover rounded-md mb-2"
+                        />
+                        <p className="text-xs font-medium truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground mb-2">${product.price}</p>
+                        <Button
+                          onClick={() => addProductToMyList(product)}
+                          disabled={isAdded}
+                          size="sm"
+                          className="w-full"
+                          variant={isAdded ? "outline" : "default"}
+                        >
+                          {isAdded ? (
+                            <>Added</>
+                          ) : (
+                            <><Plus className="h-3 w-3 mr-1" /> Add</>
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+            )}
 
+            {/* User's Selected Products */}
+            <div className="space-y-4">
+              {myProducts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <ShoppingBag className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No products selected yet</p>
+                  <p className="text-xs mt-1">Click "Browse Gallery" to add products</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                  {myProducts.map((product) => (
+                    <div
+                      key={product.name}
+                      className={`relative p-2 rounded-lg border-2 transition-all cursor-pointer ${
+                        selectedProduct?.name === product.name
+                          ? 'border-primary ring-2 ring-primary/20'
+                          : 'border-muted hover:border-primary/50'
+                      }`}
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setTryonResult(null);
+                        toast.success(`Selected: ${product.name}`);
+                      }}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeProductFromMyList(product.name);
+                        }}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center hover:bg-destructive/80 z-10"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                      <img 
+                        src={product.image} 
+                        alt={product.name}
+                        className="w-full h-32 object-cover rounded-md mb-2"
+                      />
+                      <p className="text-sm font-medium truncate">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">${product.price}</p>
+                      {selectedProduct?.name === product.name && (
+                        <Badge className="mt-1 w-full justify-center" variant="default">
+                          Selected
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 mt-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Background</label>
                 <Select value={backgroundType} onValueChange={setBackgroundType}>
