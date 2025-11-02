@@ -30,6 +30,12 @@ import leatherBelt from "@/assets/products/leather-belt.jpg";
 import baseballCap from "@/assets/products/baseball-cap.jpg";
 import pearlEarrings from "@/assets/products/pearl-earrings.jpg";
 import silkScarf from "@/assets/products/silk-scarf.jpg";
+import blueJeans from "@/assets/products/blue-jeans.jpg";
+import greenJacket from "@/assets/products/green-jacket.jpg";
+import diamondRing from "@/assets/products/diamond-ring.jpg";
+import silverBracelet from "@/assets/products/silver-bracelet.jpg";
+import yellowDress from "@/assets/products/yellow-dress.jpg";
+import blackBoots from "@/assets/products/black-boots.jpg";
 
 interface Product {
   id: string;
@@ -218,6 +224,82 @@ const products: Product[] = [
     category: 'accessories',
     image: silkScarf,
     colors: ["#FF6B6B", "#4ECDC4", "#FFD700", "#9B59B6"],
+  },
+  {
+    id: "15",
+    name: "Classic Blue Jeans",
+    brand: "DenimCo",
+    price: 59.99,
+    originalPrice: 79.99,
+    rating: 4.7,
+    reviews: 312,
+    category: 'clothing',
+    image: blueJeans,
+    colors: ["#1E3A8A", "#000000"],
+    sizes: ["28", "30", "32", "34", "36"],
+    isOnSale: true,
+  },
+  {
+    id: "16",
+    name: "Green Leather Jacket",
+    brand: "UrbanStyle",
+    price: 149.99,
+    rating: 4.8,
+    reviews: 87,
+    category: 'clothing',
+    image: greenJacket,
+    colors: ["#065F46", "#000000", "#8B4513"],
+    sizes: ["S", "M", "L", "XL"],
+    isNew: true,
+  },
+  {
+    id: "17",
+    name: "Diamond Solitaire Ring",
+    brand: "LuxeJewelry",
+    price: 299.99,
+    rating: 4.9,
+    reviews: 156,
+    category: 'accessories',
+    image: diamondRing,
+    colors: ["#C0C0C0", "#FFD700"],
+    isNew: true,
+  },
+  {
+    id: "18",
+    name: "Silver Chain Bracelet",
+    brand: "EleganceJewels",
+    price: 49.99,
+    originalPrice: 69.99,
+    rating: 4.6,
+    reviews: 203,
+    category: 'accessories',
+    image: silverBracelet,
+    colors: ["#C0C0C0", "#FFD700"],
+    isOnSale: true,
+  },
+  {
+    id: "19",
+    name: "Sunny Yellow Dress",
+    brand: "SummerVibes",
+    price: 79.99,
+    rating: 4.7,
+    reviews: 142,
+    category: 'clothing',
+    image: yellowDress,
+    colors: ["#FCD34D", "#FDE047", "#FBBF24"],
+    sizes: ["XS", "S", "M", "L"],
+  },
+  {
+    id: "20",
+    name: "Classic Black Boots",
+    brand: "FootwearLux",
+    price: 129.99,
+    rating: 4.8,
+    reviews: 267,
+    category: 'accessories',
+    image: blackBoots,
+    colors: ["#000000", "#8B4513"],
+    sizes: ["7", "8", "9", "10", "11"],
   },
 ];
 
