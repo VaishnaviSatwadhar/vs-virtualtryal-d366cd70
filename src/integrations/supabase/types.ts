@@ -38,6 +38,90 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_products: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          product_image: string
+          product_name: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_image: string
+          product_name: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_image?: string
+          product_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_measurements: {
+        Row: {
+          body_type: string | null
+          chest_cm: number | null
+          created_at: string
+          height_cm: number | null
+          hips_cm: number | null
+          id: string
+          inseam_cm: number | null
+          preferred_fit: string | null
+          shoe_size: string | null
+          shoulder_width_cm: number | null
+          sleeve_length_cm: number | null
+          updated_at: string
+          user_id: string
+          waist_cm: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          body_type?: string | null
+          chest_cm?: number | null
+          created_at?: string
+          height_cm?: number | null
+          hips_cm?: number | null
+          id?: string
+          inseam_cm?: number | null
+          preferred_fit?: string | null
+          shoe_size?: string | null
+          shoulder_width_cm?: number | null
+          sleeve_length_cm?: number | null
+          updated_at?: string
+          user_id: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          body_type?: string | null
+          chest_cm?: number | null
+          created_at?: string
+          height_cm?: number | null
+          hips_cm?: number | null
+          id?: string
+          inseam_cm?: number | null
+          preferred_fit?: string | null
+          shoe_size?: string | null
+          shoulder_width_cm?: number | null
+          sleeve_length_cm?: number | null
+          updated_at?: string
+          user_id?: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

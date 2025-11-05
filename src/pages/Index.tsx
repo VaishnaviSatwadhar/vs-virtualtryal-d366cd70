@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { VirtualTryOnHero } from "@/components/VirtualTryOnHero";
 import { CategorySelector } from "@/components/CategorySelector";
 import { VirtualTryOnInterface } from "@/components/VirtualTryOnInterface";
 import { ProductGallery } from "@/components/ProductGallery";
 import { StyleRecommendations } from "@/components/StyleRecommendations";
+import { UserMeasurementsForm } from "@/components/UserMeasurementsForm";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -66,7 +68,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="glass" size="sm" className="gap-2">
+              <User className="h-4 w-4" />
+              My Profile
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <UserMeasurementsForm />
+          </DialogContent>
+        </Dialog>
+
         <Button
           variant="glass"
           size="sm"
