@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { LogOut } from "lucide-react";
 import { VirtualTryOnHero } from "@/components/VirtualTryOnHero";
 import { CategorySelector } from "@/components/CategorySelector";
 import { VirtualTryOnInterface } from "@/components/VirtualTryOnInterface";
@@ -9,6 +13,14 @@ import { StyleRecommendations } from "@/components/StyleRecommendations";
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProductForTryOn, setSelectedProductForTryOn] = useState<{ name: string; image: string } | null>(null);
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
 
   const handleStartTrial = () => {
     // Auto-scroll to virtual trial interface
@@ -37,8 +49,34 @@ const Index = () => {
     }, 100);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          variant="glass"
+          size="sm"
+          onClick={signOut}
+          className="gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
+      </div>
       <VirtualTryOnHero onStartTrial={handleStartTrial} />
       <CategorySelector 
         selectedCategory={selectedCategory}
