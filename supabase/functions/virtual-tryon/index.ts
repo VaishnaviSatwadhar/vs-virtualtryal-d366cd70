@@ -1,11 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const allowedOrigins = [
+  'https://dkwhjdhnbwjszvciugzn.lovable.app',
+  'http://localhost:5173',
+  'http://localhost:8080'
+];
+
+const getCorsHeaders = (origin: string | null) => {
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : allowedOrigins[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
 };
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -13,16 +25,34 @@ serve(async (req) => {
   try {
     const { userImage, clothingImage, clothingName, backgroundType = "original" } = await req.json();
     
-    if (!userImage || !clothingImage) {
+    // Input validation
+    if (!userImage || typeof userImage !== 'string' || userImage.length > 1000000) {
       return new Response(
-        JSON.stringify({ error: "Missing required images" }),
+        JSON.stringify({ error: "Invalid user image data" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!clothingImage || typeof clothingImage !== 'string' || clothingImage.length > 1000000) {
+      return new Response(
+        JSON.stringify({ error: "Invalid clothing image data" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (clothingName && (typeof clothingName !== 'string' || clothingName.length > 200)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid clothing name" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "Service configuration error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Create a detailed prompt for realistic virtual try-on
@@ -41,8 +71,6 @@ CRITICAL REQUIREMENTS:
 - Preserve skin tone, hair, and all facial features exactly as in the original
 
 The result should be indistinguishable from a real photograph of the person wearing these clothes.`;
-
-    console.log("Sending virtual try-on request to AI...");
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -69,29 +97,31 @@ The result should be indistinguishable from a real photograph of the person wear
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
+          JSON.stringify({ error: "Service is currently busy. Please try again shortly." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits required. Please add credits to continue." }),
+          JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: "Image generation failed. Please try again." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const data = await response.json();
     const generatedImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!generatedImage) {
-      throw new Error("No image generated");
+      return new Response(
+        JSON.stringify({ error: "Image generation failed. Please try again." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-
-    console.log("Virtual try-on image generated successfully");
 
     return new Response(
       JSON.stringify({ 
@@ -106,10 +136,9 @@ The result should be indistinguishable from a real photograph of the person wear
     );
 
   } catch (error) {
-    console.error("Virtual try-on error:", error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Unknown error occurred" 
+        error: "An unexpected error occurred. Please try again."
       }),
       { 
         status: 500, 

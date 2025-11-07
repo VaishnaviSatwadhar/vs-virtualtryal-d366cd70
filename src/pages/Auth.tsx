@@ -7,6 +7,13 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Chrome } from 'lucide-react';
+import { z } from 'zod';
+
+const authSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }).max(72, { message: "Password must be less than 72 characters" }),
+  username: z.string().trim().min(3, { message: "Username must be at least 3 characters" }).max(50, { message: "Username must be less than 50 characters" }).regex(/^[a-zA-Z0-9_-]+$/, { message: "Username can only contain letters, numbers, underscores, and hyphens" }).optional(),
+});
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,13 +36,31 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validate inputs
+      const validation = authSchema.safeParse({
+        email: email.trim(),
+        password,
+        username: !isLogin ? username.trim() : undefined,
+      });
+
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        throw new Error(firstError.message);
+      }
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validation.data.email,
+          password: validation.data.password,
         });
 
-        if (error) throw error;
+        if (error) {
+          // Sanitize error messages
+          if (error.message.includes("Invalid login credentials")) {
+            throw new Error("Invalid email or password");
+          }
+          throw new Error("Sign in failed. Please try again.");
+        }
 
         toast({
           title: "Success!",
@@ -46,17 +71,23 @@ const Auth = () => {
         const redirectUrl = `${window.location.origin}/`;
         
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: validation.data.email,
+          password: validation.data.password,
           options: {
             emailRedirectTo: redirectUrl,
             data: {
-              username: username || email.split('@')[0],
+              username: validation.data.username || validation.data.email.split('@')[0],
             },
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          // Sanitize error messages
+          if (error.message.includes("already registered")) {
+            throw new Error("This email is already registered");
+          }
+          throw new Error("Sign up failed. Please try again.");
+        }
 
         toast({
           title: "Account created!",
