@@ -18,6 +18,7 @@ const authSchema = z.object({
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showVerificationSent, setShowVerificationSent] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -90,9 +91,10 @@ const Auth = () => {
           throw new Error("Sign up failed. Please try again.");
         }
 
+        setShowVerificationSent(true);
         toast({
           title: "Account created!",
-          description: "Please check your email to confirm your account.",
+          description: "Please check your email to verify your account.",
         });
       }
     } catch (error: any) {
@@ -163,20 +165,97 @@ const Auth = () => {
     }
   };
 
+  const handleResendVerification = async () => {
+    setLoading(true);
+    try {
+      const validation = z.string().email({ message: "Invalid email address" }).safeParse(email.trim());
+      
+      if (!validation.success) {
+        throw new Error(validation.error.errors[0].message);
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: validation.data,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Verification email sent!",
+        description: "Please check your inbox.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to resend verification email.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <div className="w-full max-w-md">
         <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-card p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-              {showResetPassword ? 'Reset Password' : isLogin ? 'Welcome Back' : 'Create Account'}
-            </h1>
-            <p className="text-muted-foreground">
-              {showResetPassword 
-                ? 'Enter your email to receive a reset link' 
-                : isLogin ? 'Sign in to your account' : 'Get started with your free account'}
-            </p>
-          </div>
+          {showVerificationSent ? (
+            <div className="text-center space-y-6">
+              <div className="mx-auto w-16 h-16 bg-success/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground mb-2">
+                  Check your email
+                </h1>
+                <p className="text-muted-foreground">
+                  We've sent a verification link to <span className="font-semibold text-foreground">{email}</span>
+                </p>
+              </div>
+              <div className="bg-accent/20 border border-accent/30 rounded-lg p-4 text-sm text-muted-foreground">
+                <p>Click the link in the email to verify your account. The link will expire in 24 hours.</p>
+              </div>
+              <div className="space-y-3">
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={handleResendVerification}
+                  disabled={loading}
+                >
+                  {loading ? 'Sending...' : 'Resend verification email'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    setShowVerificationSent(false);
+                    setEmail('');
+                    setPassword('');
+                    setUsername('');
+                  }}
+                >
+                  Back to sign up
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+                  {showResetPassword ? 'Reset Password' : isLogin ? 'Welcome Back' : 'Create Account'}
+                </h1>
+                <p className="text-muted-foreground">
+                  {showResetPassword 
+                    ? 'Enter your email to receive a reset link' 
+                    : isLogin ? 'Sign in to your account' : 'Get started with your free account'}
+                </p>
+              </div>
 
           {showResetPassword ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
@@ -313,6 +392,8 @@ const Auth = () => {
                     : 'Already have an account? Sign in'}
                 </button>
               </div>
+            </>
+          )}
             </>
           )}
         </div>
