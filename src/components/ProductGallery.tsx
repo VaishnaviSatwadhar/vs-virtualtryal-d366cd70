@@ -36,6 +36,11 @@ import diamondRing from "@/assets/products/diamond-ring.jpg";
 import silverBracelet from "@/assets/products/silver-bracelet.jpg";
 import yellowDress from "@/assets/products/yellow-dress.jpg";
 import blackBoots from "@/assets/products/black-boots.jpg";
+import bluePolo from "@/assets/products/blue-polo.jpg";
+import brownAnkleBoots from "@/assets/products/brown-ankle-boots.jpg";
+import roseGoldSmartwatch from "@/assets/products/rose-gold-smartwatch.jpg";
+import grayCardigan from "@/assets/products/gray-cardigan.jpg";
+import crossbodyBag from "@/assets/products/crossbody-bag.jpg";
 
 interface Product {
   id: string;
@@ -301,6 +306,70 @@ const products: Product[] = [
     colors: ["#000000", "#8B4513"],
     sizes: ["7", "8", "9", "10", "11"],
   },
+  {
+    id: "21",
+    name: "Navy Blue Polo Shirt",
+    brand: "ClassicPolo",
+    price: 44.99,
+    rating: 4.6,
+    reviews: 189,
+    category: 'clothing',
+    image: bluePolo,
+    colors: ["#1E3A8A", "#FFFFFF", "#000000"],
+    sizes: ["S", "M", "L", "XL"],
+    isNew: true,
+  },
+  {
+    id: "22",
+    name: "Brown Leather Ankle Boots",
+    brand: "UrbanStride",
+    price: 119.99,
+    originalPrice: 149.99,
+    rating: 4.7,
+    reviews: 145,
+    category: 'accessories',
+    image: brownAnkleBoots,
+    colors: ["#8B4513", "#000000"],
+    sizes: ["6", "7", "8", "9", "10"],
+    isOnSale: true,
+  },
+  {
+    id: "23",
+    name: "Rose Gold Smartwatch",
+    brand: "TechElegance",
+    price: 249.99,
+    rating: 4.9,
+    reviews: 312,
+    category: 'accessories',
+    image: roseGoldSmartwatch,
+    colors: ["#E0BFB8", "#000000", "#C0C0C0"],
+    isNew: true,
+  },
+  {
+    id: "24",
+    name: "Premium Gray Cardigan",
+    brand: "CozyKnit",
+    price: 69.99,
+    rating: 4.5,
+    reviews: 178,
+    category: 'clothing',
+    image: grayCardigan,
+    colors: ["#6B7280", "#000000", "#FFFFFF"],
+    sizes: ["S", "M", "L", "XL"],
+  },
+  {
+    id: "25",
+    name: "Leather Crossbody Bag",
+    brand: "ChicCarry",
+    price: 89.99,
+    originalPrice: 119.99,
+    rating: 4.8,
+    reviews: 223,
+    category: 'accessories',
+    image: crossbodyBag,
+    colors: ["#8B4513", "#000000", "#DC2626"],
+    isOnSale: true,
+  },
 ];
 
 const categoryIcons = {
@@ -339,6 +408,11 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGall
   const handleAddToCart = (productId: string, productName: string) => {
     setCart(prev => [...prev, productId]);
     toast.success(`${productName} added to cart!`);
+  };
+
+  const handleBuyNow = (product: Product) => {
+    toast.success(`Proceeding to checkout for ${product.name}`);
+    // Navigate to checkout page
   };
 
   const handleLoadMore = () => {
@@ -503,7 +577,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGall
                 )}
 
                 {/* Price and Actions */}
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-foreground">
                       ${product.price}
@@ -515,14 +589,23 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGall
                     )}
                   </div>
                   
-                  <Button 
-                    variant="hero" 
-                    size="sm" 
-                    onClick={() => handleAddToCart(product.id, product.name)}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    Add to Cart
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="hero" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleBuyNow(product)}
+                    >
+                      Buy Now
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleAddToCart(product.id, product.name)}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
