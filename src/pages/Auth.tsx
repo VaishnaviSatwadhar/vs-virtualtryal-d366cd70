@@ -59,9 +59,12 @@ const Auth = () => {
         if (error) {
           // Sanitize error messages
           if (error.message.includes("Invalid login credentials")) {
-            throw new Error("Invalid email or password");
+            throw new Error("Invalid email or password. Please check your credentials or reset your password.");
           }
-          throw new Error("Sign in failed. Please try again.");
+          if (error.message.includes("Email not confirmed")) {
+            throw new Error("Please verify your email before logging in. Check your inbox for the verification link.");
+          }
+          throw new Error(error.message || "Sign in failed. Please try again.");
         }
 
         toast({
@@ -121,11 +124,21 @@ const Auth = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('provider is not enabled') || error.message.includes('Unsupported provider')) {
+          toast({
+            title: "Google Sign-In Not Configured",
+            description: "Please use email/password to sign in, or contact support to enable Google authentication.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
+        description: error.message || "Failed to sign in with Google. Please try again.",
         variant: "destructive",
       });
     }
