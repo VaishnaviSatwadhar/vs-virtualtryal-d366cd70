@@ -9,7 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Ruler, Save } from 'lucide-react';
 
-export const UserMeasurementsForm = () => {
+interface UserMeasurementsFormProps {
+  onSuccess?: () => void;
+}
+
+export const UserMeasurementsForm = ({ onSuccess }: UserMeasurementsFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -93,6 +97,10 @@ export const UserMeasurementsForm = () => {
         title: "Success!",
         description: "Your measurements have been saved.",
       });
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error: any) {
       toast({
         title: "Error",

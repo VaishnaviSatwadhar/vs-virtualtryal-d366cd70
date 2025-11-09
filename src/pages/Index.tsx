@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProductForTryOn, setSelectedProductForTryOn] = useState<{ name: string; image: string } | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -69,7 +70,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <Dialog>
+        <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="glass" size="sm" className="gap-2">
               <User className="h-4 w-4" />
@@ -77,7 +78,7 @@ const Index = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <UserMeasurementsForm />
+            <UserMeasurementsForm onSuccess={() => setProfileDialogOpen(false)} />
           </DialogContent>
         </Dialog>
 
