@@ -306,20 +306,37 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         throw error;
       }
 
+      if (data?.error) {
+        if (data.requiresNewImage) {
+          toast.error(data.error, { duration: 6000 });
+          // Clear the current image to prompt user for a new one
+          setUserImage(null);
+          setTryonResult(null);
+        } else {
+          throw new Error(data.error);
+        }
+        return;
+      }
+
       if (data?.image) {
         setTryonResult(data.image);
-        toast.success("✨ Virtual try-on complete! Looking great!");
+        toast.success("✨ Virtual try-on complete! Looking great!", { duration: 5000 });
+        toast.info("💡 Tip: Try changing the background or trying different items!", { duration: 4000 });
       } else {
         throw new Error("No image generated");
       }
     } catch (error: any) {
       console.error('Virtual try-on error:', error);
-      if (error.message?.includes("Rate limit")) {
-        toast.error("Too many requests. Please wait a moment and try again.");
-      } else if (error.message?.includes("credits")) {
-        toast.error("AI credits required. Please add credits to continue.");
+      if (error.message?.includes("Rate limit") || error.message?.includes("429")) {
+        toast.error("Too many requests. Please wait a moment and try again.", { duration: 5000 });
+      } else if (error.message?.includes("credits") || error.message?.includes("402")) {
+        toast.error("AI credits required. Please add credits to continue.", { duration: 5000 });
+      } else if (error.message?.includes("person detected")) {
+        toast.error("Please upload a clearer photo with your full face and upper body visible.", { duration: 6000 });
+        setUserImage(null);
+        setTryonResult(null);
       } else {
-        toast.error("Failed to generate try-on. Please try again.");
+        toast.error("Failed to generate try-on. Ensure your photo clearly shows a person facing the camera.", { duration: 5000 });
       }
     } finally {
       setIsProcessing(false);
@@ -652,6 +669,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
                   <SelectContent>
                     <SelectItem value="original">Keep Original</SelectItem>
                     <SelectItem value="plain">Plain White</SelectItem>
+                    <SelectItem value="transparent">Transparent</SelectItem>
                     <SelectItem value="studio">Studio Setting</SelectItem>
                   </SelectContent>
                 </Select>
