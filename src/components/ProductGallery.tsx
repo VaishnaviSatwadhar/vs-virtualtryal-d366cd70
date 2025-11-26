@@ -25,7 +25,6 @@ import whiteHoodie from "@/assets/products/white-hoodie.jpg";
 import leatherHandbag from "@/assets/products/leather-handbag.jpg";
 import goldNecklace from "@/assets/products/gold-necklace.jpg";
 import blackSunglasses from "@/assets/products/black-sunglasses.jpg";
-import whiteSneakers from "@/assets/products/white-sneakers.jpg";
 import leatherBelt from "@/assets/products/leather-belt.jpg";
 import baseballCap from "@/assets/products/baseball-cap.jpg";
 import pearlEarrings from "@/assets/products/pearl-earrings.jpg";
@@ -35,9 +34,7 @@ import greenJacket from "@/assets/products/green-jacket.jpg";
 import diamondRing from "@/assets/products/diamond-ring.jpg";
 import silverBracelet from "@/assets/products/silver-bracelet.jpg";
 import yellowDress from "@/assets/products/yellow-dress.jpg";
-import blackBoots from "@/assets/products/black-boots.jpg";
 import bluePolo from "@/assets/products/blue-polo.jpg";
-import brownAnkleBoots from "@/assets/products/brown-ankle-boots.jpg";
 import roseGoldSmartwatch from "@/assets/products/rose-gold-smartwatch.jpg";
 import grayCardigan from "@/assets/products/gray-cardigan.jpg";
 import crossbodyBag from "@/assets/products/crossbody-bag.jpg";
@@ -172,15 +169,15 @@ const products: Product[] = [
   },
   {
     id: "10",
-    name: "White Leather Sneakers",
-    brand: "SportLux",
+    name: "Vintage Denim Jacket",
+    brand: "RetroStyle",
     price: 89.99,
     rating: 4.7,
     reviews: 156,
-    category: 'accessories',
-    image: whiteSneakers,
-    colors: ["#FFFFFF", "#000000", "#FF6B6B"],
-    sizes: ["7", "8", "9", "10", "11", "12"],
+    category: 'clothing',
+    image: denimJacket,
+    colors: ["#4169E1", "#1E3A8A", "#000000"],
+    sizes: ["S", "M", "L", "XL"],
   },
   {
     id: "11",
@@ -296,15 +293,15 @@ const products: Product[] = [
   },
   {
     id: "20",
-    name: "Classic Black Boots",
-    brand: "FootwearLux",
+    name: "Elegant Gray Cardigan",
+    brand: "ComfortKnits",
     price: 129.99,
     rating: 4.8,
     reviews: 267,
-    category: 'accessories',
-    image: blackBoots,
-    colors: ["#000000", "#8B4513"],
-    sizes: ["7", "8", "9", "10", "11"],
+    category: 'clothing',
+    image: grayCardigan,
+    colors: ["#6B7280", "#374151", "#E5E7EB"],
+    sizes: ["S", "M", "L", "XL"],
   },
   {
     id: "21",
@@ -321,16 +318,15 @@ const products: Product[] = [
   },
   {
     id: "22",
-    name: "Brown Leather Ankle Boots",
-    brand: "UrbanStride",
+    name: "Silver Watch Collection",
+    brand: "TimelessElegance",
     price: 119.99,
     originalPrice: 149.99,
     rating: 4.7,
     reviews: 145,
     category: 'accessories',
-    image: brownAnkleBoots,
-    colors: ["#8B4513", "#000000"],
-    sizes: ["6", "7", "8", "9", "10"],
+    image: silverWatch,
+    colors: ["#C0C0C0", "#FFD700"],
     isOnSale: true,
   },
   {
