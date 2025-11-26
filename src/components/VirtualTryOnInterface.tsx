@@ -18,7 +18,8 @@ import goldSmartwatch from "@/assets/products/gold-smartwatch.jpg";
 import leatherHandbag from "@/assets/products/leather-handbag.jpg";
 import goldNecklace from "@/assets/products/gold-necklace.jpg";
 import blackSunglasses from "@/assets/products/black-sunglasses.jpg";
-import whiteSneakers from "@/assets/products/white-sneakers.jpg";
+import grayCardigan from "@/assets/products/gray-cardigan.jpg";
+import crossbodyBag from "@/assets/products/crossbody-bag.jpg";
 import leatherBelt from "@/assets/products/leather-belt.jpg";
 import baseballCap from "@/assets/products/baseball-cap.jpg";
 import pearlEarrings from "@/assets/products/pearl-earrings.jpg";
@@ -28,7 +29,6 @@ import greenJacket from "@/assets/products/green-jacket.jpg";
 import diamondRing from "@/assets/products/diamond-ring.jpg";
 import silverBracelet from "@/assets/products/silver-bracelet.jpg";
 import yellowDress from "@/assets/products/yellow-dress.jpg";
-import blackBoots from "@/assets/products/black-boots.jpg";
 
 interface Product {
   name: string;
@@ -82,8 +82,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     { name: "Silk Scarf", image: silkScarf, brand: "LuxeAccessories", price: 32.99 },
     { name: "Leather Belt", image: leatherBelt, brand: "ClassicWear", price: 39.99 },
     { name: "Leather Handbag", image: leatherHandbag, brand: "LuxeBags", price: 149.99 },
-    { name: "White Sneakers", image: whiteSneakers, brand: "SportLux", price: 89.99 },
-    { name: "Black Boots", image: blackBoots, brand: "FootwearLux", price: 129.99 },
+    { name: "Gray Cardigan", image: grayCardigan, brand: "ComfortKnits", price: 129.99 },
+    { name: "Crossbody Bag", image: crossbodyBag, brand: "UrbanStyle", price: 69.99 },
   ];
 
   // Auto-select product when passed from gallery

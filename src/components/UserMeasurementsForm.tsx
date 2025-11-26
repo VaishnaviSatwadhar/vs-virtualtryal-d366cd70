@@ -222,16 +222,6 @@ export const UserMeasurementsForm = ({ onSuccess }: UserMeasurementsFormProps) =
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="shoe">Shoe Size</Label>
-              <Input
-                id="shoe"
-                type="text"
-                placeholder="US 9 / EU 42"
-                value={measurements.shoe_size}
-                onChange={(e) => setMeasurements({ ...measurements, shoe_size: e.target.value })}
-              />
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="bodyType">Body Type</Label>
