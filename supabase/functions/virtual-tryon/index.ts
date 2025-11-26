@@ -1,29 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const allowedOrigins = [
-  'https://dkwhjdhnbwjszvciugzn.lovable.app',
-  'http://localhost:5173',
-  'http://localhost:8080'
-];
-
-const getCorsHeaders = (origin: string | null) => {
-  const isAllowed = origin && allowedOrigins.includes(origin);
-  return {
-    'Access-Control-Allow-Origin': isAllowed ? origin : allowedOrigins[0],
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
-  const origin = req.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("Virtual try-on request received");
     const { userImage, clothingImage, clothingName, backgroundType = "original" } = await req.json();
+    console.log("Request data parsed successfully", { clothingName, backgroundType });
     
     // Input validation
     if (!userImage || typeof userImage !== 'string' || userImage.length > 1000000) {
@@ -49,11 +39,14 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY not configured");
       return new Response(
         JSON.stringify({ error: "Service configuration error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("Starting AI image generation...");
 
     // Create a detailed prompt for realistic virtual try-on
     const prompt = `TASK: Create a photorealistic virtual try-on image. Detect the person in the first image and seamlessly fit the ${clothingName || 'clothing/jewelry item'} from the second image onto them.
@@ -117,6 +110,9 @@ OUTPUT: A smooth, high-quality, photorealistic image that looks like the person 
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("AI API error:", response.status, errorText);
+      
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Service is currently busy. Please try again shortly." }),
@@ -151,12 +147,14 @@ OUTPUT: A smooth, high-quality, photorealistic image that looks like the person 
     }
 
     if (!generatedImage) {
+      console.error("No image generated in response");
       return new Response(
         JSON.stringify({ error: "Image generation failed. Please ensure your photo clearly shows a person and try again." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("Virtual try-on completed successfully");
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -170,9 +168,11 @@ OUTPUT: A smooth, high-quality, photorealistic image that looks like the person 
     );
 
   } catch (error) {
+    console.error("Edge function error:", error);
     return new Response(
       JSON.stringify({ 
-        error: "An unexpected error occurred. Please try again."
+        error: "An unexpected error occurred. Please try again.",
+        details: error instanceof Error ? error.message : String(error)
       }),
       { 
         status: 500, 
