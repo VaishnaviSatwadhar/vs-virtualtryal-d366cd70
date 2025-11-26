@@ -56,21 +56,43 @@ serve(async (req) => {
     }
 
     // Create a detailed prompt for realistic virtual try-on
-    const prompt = `Create a photorealistic virtual try-on image. Take the person from the first image and make them wear the clothing item from the second image (${clothingName || 'clothing item'}). 
+    const prompt = `TASK: Create a photorealistic virtual try-on image. Detect the person in the first image and seamlessly fit the ${clothingName || 'clothing/jewelry item'} from the second image onto them.
 
-CRITICAL REQUIREMENTS:
-- Preserve the person's face, body posture, and proportions EXACTLY from the original photo
-- Seamlessly blend the clothing onto the person's body with perfect alignment
-- Match lighting, shadows, and highlights to the person's environment
-- Add realistic fabric wrinkles, folds, and texture that follow body contours naturally
-- Ensure the clothing fits the body shape accurately with proper draping
-- Maintain consistent color temperature and tone throughout the image
-- Add subtle cast shadows where clothing overlaps body
-- Keep the ${backgroundType === "original" ? "original background unchanged" : backgroundType === "plain" ? "background as plain white studio" : "background as professional studio setting"}
-- Make it look like a real photograph, not a digital composite
-- Preserve skin tone, hair, and all facial features exactly as in the original
+PERSON DETECTION & VALIDATION:
+- First, verify a clear person is visible in the image with identifiable body, face, and pose
+- If no person is detected or the image is too unclear, RESPOND with text "ERROR: No clear person detected. Please provide a clearer image with a visible person."
+- The person must be facing the camera with clear shoulders, neck, and torso visible
 
-The result should be indistinguishable from a real photograph of the person wearing these clothes.`;
+BODY POSE & ALIGNMENT:
+- Accurately detect body pose, shoulder width, neck position, and torso orientation
+- Align the clothing/jewelry item to match the exact body angle and perspective
+- Preserve the natural body shape and proportions without distortion
+- Maintain correct placement on neck, shoulders, chest, or relevant body part
+
+FITTING & PROPORTIONS:
+- Fit the item realistically according to body measurements and pose
+- For clothing: ensure proper draping, natural fabric flow following body contours
+- For jewelry: position precisely on neck, wrists, fingers, or ears with correct scale
+- Add realistic fabric wrinkles, folds, and texture that respond to body movement
+- Scale the item proportionally to the person's body size
+
+LIGHTING & SHADOWS:
+- Match lighting direction, intensity, and color temperature from the original photo
+- Add natural shadows where clothing/jewelry overlaps body
+- Create realistic highlights on reflective surfaces (jewelry, watches)
+- Ensure consistent lighting across the entire composition
+
+QUALITY & REALISM:
+- Preserve the person's face, hair, skin tone, and all features EXACTLY
+- Do NOT crop the face or any body parts
+- Blend seamlessly with no visible edges or compositing artifacts
+- Make it indistinguishable from a real photograph
+- Keep high resolution and sharp details throughout
+
+BACKGROUND HANDLING:
+- ${backgroundType === "transparent" ? "Remove background completely for transparent PNG output" : backgroundType === "plain" ? "Replace with clean white studio background" : backgroundType === "professional" ? "Replace with professional studio setting with soft lighting" : "Preserve the original background exactly as is"}
+
+OUTPUT: A smooth, high-quality, photorealistic image that looks like the person naturally wearing/accessorizing with the item. No distortion, cropping, or artificial appearance.`;
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -115,10 +137,22 @@ The result should be indistinguishable from a real photograph of the person wear
 
     const data = await response.json();
     const generatedImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const aiResponse = data.choices?.[0]?.message?.content;
+
+    // Check if AI detected an error (no person found)
+    if (aiResponse && typeof aiResponse === 'string' && aiResponse.includes("ERROR:")) {
+      return new Response(
+        JSON.stringify({ 
+          error: "No clear person detected in the image. Please upload a clearer photo showing your face, shoulders, and torso facing the camera.",
+          requiresNewImage: true
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!generatedImage) {
       return new Response(
-        JSON.stringify({ error: "Image generation failed. Please try again." }),
+        JSON.stringify({ error: "Image generation failed. Please ensure your photo clearly shows a person and try again." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -127,7 +161,7 @@ The result should be indistinguishable from a real photograph of the person wear
       JSON.stringify({ 
         success: true, 
         image: generatedImage,
-        message: "Virtual try-on completed successfully"
+        message: "Virtual try-on completed successfully! The item has been fitted realistically to your body."
       }),
       { 
         status: 200, 
