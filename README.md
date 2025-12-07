@@ -140,13 +140,7 @@ Developed By:
 
 Vaishnavi Satwadhar
 
-Apoorva Giri
 
-Khushi Khotre
-
-Guided By:
-
-Prof. M. S. Sonwalkar
 
 📌 Project Status
 
