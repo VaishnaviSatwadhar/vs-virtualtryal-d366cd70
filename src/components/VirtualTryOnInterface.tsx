@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag, RotateCcw, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -41,6 +41,15 @@ interface VirtualTryOnInterfaceProps {
   selectedProduct?: { name: string; image: string } | null;
 }
 
+type CameraResolution = "720p" | "1080p" | "4k";
+type FacingMode = "user" | "environment";
+
+const RESOLUTION_CONFIG: Record<CameraResolution, { width: number; height: number; label: string }> = {
+  "720p": { width: 1280, height: 720, label: "HD (720p)" },
+  "1080p": { width: 1920, height: 1080, label: "Full HD (1080p)" },
+  "4k": { width: 3840, height: 2160, label: "4K Ultra HD" },
+};
+
 export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: VirtualTryOnInterfaceProps) => {
   const [userImage, setUserImage] = useState<string | null>(null);
   const [tryonResult, setTryonResult] = useState<string | null>(null);
@@ -54,10 +63,18 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const [imageUrl, setImageUrl] = useState<string>("");
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  
+  // New camera settings state
+  const [cameraResolution, setCameraResolution] = useState<CameraResolution>("1080p");
+  const [facingMode, setFacingMode] = useState<FacingMode>("user");
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [showCameraSettings, setShowCameraSettings] = useState(false);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // All available products for try-on
   const products: Product[] = [
@@ -128,10 +145,22 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     toast.success(`Product removed from your selection`);
   };
 
-  const startCamera = async () => {
+  const startCamera = useCallback(async (mode?: FacingMode) => {
+    // Stop any existing stream first
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    
+    const currentFacingMode = mode || facingMode;
+    const resolution = RESOLUTION_CONFIG[cameraResolution];
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user', width: 1280, height: 720 } 
+        video: { 
+          facingMode: currentFacingMode, 
+          width: { ideal: resolution.width }, 
+          height: { ideal: resolution.height } 
+        } 
       });
       
       if (videoRef.current) {
@@ -140,7 +169,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         // Wait for video to be ready
         videoRef.current.onloadedmetadata = () => {
           setIsCameraReady(true);
-          toast.success("Camera ready!");
+          toast.success(`Camera ready! (${resolution.label})`);
         };
       }
       
@@ -152,10 +181,33 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         toast.error("Camera access denied. Please allow camera permissions.");
       } else if (error.name === 'NotFoundError') {
         toast.error("No camera found on your device.");
+      } else if (error.name === 'OverconstrainedError') {
+        // Fallback to lower resolution if requested is not supported
+        toast.info("Requested resolution not available, using default.");
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: currentFacingMode } 
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = fallbackStream;
+          videoRef.current.onloadedmetadata = () => {
+            setIsCameraReady(true);
+            toast.success("Camera ready!");
+          };
+        }
+        streamRef.current = fallbackStream;
+        setShowCamera(true);
       } else {
         toast.error("Failed to access camera. Please try again.");
       }
     }
+  }, [facingMode, cameraResolution]);
+
+  const flipCamera = async () => {
+    const newMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(newMode);
+    setIsCameraReady(false);
+    await startCamera(newMode);
+    toast.success(newMode === "user" ? "Front camera" : "Rear camera");
   };
 
   const stopCamera = () => {
@@ -163,11 +215,16 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
     setShowCamera(false);
     setIsCameraReady(false);
+    setCountdown(null);
   };
 
-  const capturePhoto = () => {
+  const doCapture = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) {
       toast.error("Camera not ready. Please try again.");
       return;
@@ -206,7 +263,41 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       console.error('Capture error:', error);
       toast.error("Failed to capture photo. Please try again.");
     }
+  }, []);
+
+  const capturePhoto = () => {
+    if (!isCameraReady) {
+      toast.error("Camera not ready. Please wait.");
+      return;
+    }
+    
+    // Start 3 second countdown
+    setCountdown(3);
+    
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+          // Capture on next tick to ensure state is updated
+          setTimeout(() => doCapture(), 50);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
+
+  // Cleanup countdown on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -380,7 +471,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             {!showCamera && !userImage && !showUrlInput && (
               <div className="space-y-4">
                 <Button 
-                  onClick={startCamera}
+                  onClick={() => startCamera()}
                   className="w-full"
                   size="lg"
                 >
@@ -502,23 +593,88 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
                     muted
                     className="w-full rounded-lg bg-muted aspect-[3/4] object-cover"
                   />
+                  
+                  {/* Live indicator */}
                   <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pulse">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                     LIVE
                   </div>
+                  
+                  {/* Camera controls overlay */}
+                  <div className="absolute top-2 left-2 flex gap-2">
+                    <Button
+                      onClick={flipCamera}
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+                      title="Flip camera"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={() => setShowCameraSettings(!showCameraSettings)}
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+                      title="Camera settings"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Countdown overlay */}
+                  {countdown !== null && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg">
+                      <span className="text-7xl font-bold text-primary animate-pulse">
+                        {countdown}
+                      </span>
+                    </div>
+                  )}
                 </div>
+                
+                {/* Camera settings panel */}
+                {showCameraSettings && (
+                  <div className="p-3 bg-muted rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Resolution</span>
+                      <Select
+                        value={cameraResolution}
+                        onValueChange={(value: CameraResolution) => {
+                          setCameraResolution(value);
+                          toast.info(`Resolution will apply on next camera start`);
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="720p">HD (720p)</SelectItem>
+                          <SelectItem value="1080p">Full HD (1080p)</SelectItem>
+                          <SelectItem value="4k">4K Ultra HD</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Camera</span>
+                      <Badge variant="secondary" className="capitalize">
+                        {facingMode === "user" ? "Front" : "Rear"}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+                
                 <p className="text-sm text-muted-foreground text-center">
-                  Position yourself in frame and click Capture
+                  Position yourself in frame and click Capture (3s countdown)
                 </p>
                 <div className="flex gap-2">
                   <Button 
                     onClick={capturePhoto}
-                    disabled={!isCameraReady}
+                    disabled={!isCameraReady || countdown !== null}
                     className="flex-1"
                     size="lg"
                   >
                     <Camera className="mr-2 h-5 w-5" />
-                    {isCameraReady ? 'Capture Photo' : 'Loading...'}
+                    {countdown !== null ? `Capturing in ${countdown}...` : isCameraReady ? 'Capture Photo' : 'Loading...'}
                   </Button>
                   <Button 
                     onClick={stopCamera}
