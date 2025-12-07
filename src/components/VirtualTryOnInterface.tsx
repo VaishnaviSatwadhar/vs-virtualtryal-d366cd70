@@ -254,7 +254,18 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       if (imageData && imageData !== 'data:,') {
         setUserImage(imageData);
         setTryonResult(null);
-        stopCamera();
+        // Stop camera inline to avoid stale closure
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
+        setShowCamera(false);
+        setIsCameraReady(false);
+        setCountdown(null);
         toast.success("Photo captured! Now select a clothing item.");
       } else {
         throw new Error("Failed to capture image data");
