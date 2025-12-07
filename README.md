@@ -1,73 +1,155 @@
-# Welcome to your Lovable project
+✨ Virtual Try-On System for Clothes & Jewellery
 
-## Project info
+A smart AR-based solution enabling users to digitally try outfits and jewellery before purchasing. This system enhances customer confidence, reduces product returns, and revolutionizes the online shopping experience.
 
-**URL**: https://lovable.dev/projects/1bb68d33-cccf-4df4-94ba-288b25804f39
+🚀 Project Info
 
-## How can I edit this code?
+🔗 Live Project URL (Lovable):
+https://lovable.dev/projects/1bb68d33-cccf-4df4-94ba-288b25804f39
 
-There are several ways of editing your application.
+👩‍💻 Tech Stack:
+Vite • React • TypeScript • Tailwind CSS • shadcn-ui • MediaPipe (Body + Face Tracking)
 
-**Use Lovable**
+📌 Purpose:
+To allow users to preview clothes & jewellery virtually — improving decision-making and boosting e-commerce sales.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1bb68d33-cccf-4df4-94ba-288b25804f39) and start prompting.
+✨ Features
 
-Changes made via Lovable will be committed automatically to this repo.
+🎯 Core Functionality
 
-**Use your preferred IDE**
+Real-time virtual try-on for clothes & jewellery
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Face & hand tracking using MediaPipe
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Camera-based overlay with accurate positioning
 
-Follow these steps:
+Product preview before online purchase
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+User-friendly modern UI
+
+🎨 Design & UI
+
+Responsive & mobile-first layout
+
+Smooth animations and transitions
+
+Attractive product showcasing cards
+
+Clean and minimal shopping interface
+
+📈 Retail Advantages
+
+Reduces return rates
+
+Increases customer satisfaction
+
+Encourages confident purchasing decisions
+
+🧠 System Architecture
+
+Object Detection (Face/Hands)
+
+2D Overlay Mapping
+
+Size & Position Adjustment
+
+Real-Time Visualization
+
+♿ Accessibility
+
+Keyboard navigation support
+
+Semantic HTML structure
+
+Optimized for all screen sizes
+
+🛠 Tech Used
+Technology	Purpose
+React + TypeScript	Frontend development
+Vite	Fast build system
+Tailwind CSS	Modern UI styling
+shadcn-ui	UI components
+MediaPipe	Tracking for virtual try-on
+📦 Project Structure
+Virtual-TryOn/
+├── src/
+│   ├── components/       # UI components
+│   ├── assets/            # Images, try-on objects
+│   ├── App.tsx            # Main entry component
+│   └── styles.css         # Tailwind & global styles
+├── public/                # Static assets
+├── index.html
+├── package.json
+└── vite.config.ts
+
+🚀 Getting Started
+✅ Prerequisites
+
+Node.js ≥ 18
+
+npm or yarn
+
+📌 Installation
+# Clone the repo
 git clone <YOUR_GIT_URL>
+cd Virtual-TryOn
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Run development server
 npm run dev
-```
 
-**Edit a file directly in GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+➡ Open browser and visit:
+http://localhost:5173
 
-**Use GitHub Codespaces**
+Production Build
+npm run build
+npm run preview
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+🌍 Deployment
 
-## What technologies are used for this project?
+You can deploy instantly using Lovable:
 
-This project is built with:
+Share → Publish from project dashboard
+or connect a custom domain via:
+👉 Project → Settings → Domains
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+More info: Setting up a custom domain on Lovable
 
-## How can I deploy this project?
+🤝 Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/1bb68d33-cccf-4df4-94ba-288b25804f39) and click on Share -> Publish.
+Contributions are welcome!
+Steps:
 
-## Can I connect a custom domain to my Lovable project?
+git checkout -b feature/my-new-feature
+git commit -m "Add new functionality"
+git push origin feature/my-new-feature
 
-Yes, you can!
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Then open a Pull Request 🎉
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+📄 License
+
+This project is licensed under the MIT License.
+
+👥 Team
+
+Developed By:
+
+Vaishnavi Satwadhar
+
+Apoorva Giri
+
+Khushi Khotre
+
+Guided By:
+
+Prof. M. S. Sonwalkar
+
+📌 Project Status
+
+✔ Active Development
+📅 Latest Updated: 2025
+🎯 Phase-1 Completed (Prototype)
