@@ -9,12 +9,29 @@ const allowedOrigins = [
   'http://localhost:8080'
 ];
 
+// Allowed domains for URLs in emails (prevents phishing)
+const allowedUrlDomains = [
+  'dkwhjdhnbwjszvciugzn.lovable.app',
+  'dkwhjdhnbwjszvciugzn.supabase.co',
+  'localhost'
+];
+
 const getCorsHeaders = (origin: string | null) => {
   const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
   return {
     "Access-Control-Allow-Origin": corsOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
+};
+
+// Validate URL belongs to allowed domains
+const isValidUrl = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString);
+    return allowedUrlDomains.some(domain => url.hostname === domain || url.hostname.endsWith('.' + domain));
+  } catch {
+    return false;
+  }
 };
 
 interface VerificationEmailRequest {
@@ -53,6 +70,15 @@ const handler = async (req: Request): Promise<Response> => {
     if (email.length > 255) {
       return new Response(
         JSON.stringify({ error: "Email too long" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate confirmation URL domain to prevent phishing
+    if (!isValidUrl(confirmationUrl)) {
+      console.error("Invalid confirmation URL domain attempted:", confirmationUrl);
+      return new Response(
+        JSON.stringify({ error: "Invalid confirmation URL" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
