@@ -467,17 +467,20 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGall
               className="group bg-gradient-card border-border overflow-hidden hover:shadow-card hover:scale-105 transition-all duration-300"
             >
               {/* Product Image */}
-              <div className="aspect-square bg-muted/30 relative overflow-hidden">
-                <img 
-                  src={product.image} 
-                  alt={product.name}
-                  loading="lazy"
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                  onError={(e) => {
-                    console.error(`Failed to load image for ${product.name}`);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+              <div className="aspect-square bg-muted/20 relative overflow-hidden">
+                {typeof product.image === 'string' && product.image.startsWith('http') ? (
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                  />
+                ) : (
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                  />
+                )}
                 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
