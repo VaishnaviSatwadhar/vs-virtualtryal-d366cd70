@@ -48,44 +48,13 @@ serve(async (req) => {
 
     console.log("Starting AI image generation...");
 
-    // Create a detailed prompt for realistic virtual try-on
-    const prompt = `TASK: Create a photorealistic virtual try-on image. Detect the person in the first image and seamlessly fit the ${clothingName || 'clothing/jewelry item'} from the second image onto them.
-
-PERSON DETECTION & VALIDATION:
-- First, verify a clear person is visible in the image with identifiable body, face, and pose
-- If no person is detected or the image is too unclear, RESPOND with text "ERROR: No clear person detected. Please provide a clearer image with a visible person."
-- The person must be facing the camera with clear shoulders, neck, and torso visible
-
-BODY POSE & ALIGNMENT:
-- Accurately detect body pose, shoulder width, neck position, and torso orientation
-- Align the clothing/jewelry item to match the exact body angle and perspective
-- Preserve the natural body shape and proportions without distortion
-- Maintain correct placement on neck, shoulders, chest, or relevant body part
-
-FITTING & PROPORTIONS:
-- Fit the item realistically according to body measurements and pose
-- For clothing: ensure proper draping, natural fabric flow following body contours
-- For jewelry: position precisely on neck, wrists, fingers, or ears with correct scale
-- Add realistic fabric wrinkles, folds, and texture that respond to body movement
-- Scale the item proportionally to the person's body size
-
-LIGHTING & SHADOWS:
-- Match lighting direction, intensity, and color temperature from the original photo
-- Add natural shadows where clothing/jewelry overlaps body
-- Create realistic highlights on reflective surfaces (jewelry, watches)
-- Ensure consistent lighting across the entire composition
-
-QUALITY & REALISM:
-- Preserve the person's face, hair, skin tone, and all features EXACTLY
-- Do NOT crop the face or any body parts
-- Blend seamlessly with no visible edges or compositing artifacts
-- Make it indistinguishable from a real photograph
-- Keep high resolution and sharp details throughout
-
-BACKGROUND HANDLING:
-- ${backgroundType === "transparent" ? "Remove background completely for transparent PNG output" : backgroundType === "plain" ? "Replace with clean white studio background" : backgroundType === "professional" ? "Replace with professional studio setting with soft lighting" : "Preserve the original background exactly as is"}
-
-OUTPUT: A smooth, high-quality, photorealistic image that looks like the person naturally wearing/accessorizing with the item. No distortion, cropping, or artificial appearance.`;
+    // Concise prompt for faster AI processing
+    const bgInstruction = backgroundType === "transparent" ? "transparent background" : 
+                          backgroundType === "plain" ? "white studio background" : 
+                          backgroundType === "professional" ? "professional studio background" : 
+                          "keep original background";
+    
+    const prompt = `Virtual try-on: Fit the ${clothingName || 'item'} from image 2 onto the person in image 1. Match body pose, lighting, and proportions. ${bgInstruction}. If no person visible, respond "ERROR: No person detected". Output photorealistic result.`;
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
