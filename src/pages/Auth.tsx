@@ -23,6 +23,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -112,6 +113,7 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -128,16 +130,19 @@ const Auth = () => {
         if (error.message.includes('provider is not enabled') || error.message.includes('Unsupported provider')) {
           toast({
             title: "Google Sign-In Not Configured",
-            description: "Please use email/password to sign in, or contact support to enable Google authentication.",
+            description: "Google authentication is not enabled. Please configure it in your backend settings.",
             variant: "destructive",
           });
         } else {
           throw error;
         }
+        setGoogleLoading(false);
       }
+      // Note: If successful, the page will redirect, so we don't reset loading state
     } catch (error: any) {
+      setGoogleLoading(false);
       toast({
-        title: "Error",
+        title: "Authentication Failed",
         description: error.message || "Failed to sign in with Google. Please try again.",
         variant: "destructive",
       });
@@ -389,9 +394,19 @@ const Auth = () => {
                 variant="outline"
                 className="w-full"
                 onClick={handleGoogleSignIn}
+                disabled={googleLoading}
               >
-                <Chrome className="mr-2 h-5 w-5" />
-                Continue with Google
+                {googleLoading ? (
+                  <>
+                    <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Chrome className="mr-2 h-5 w-5" />
+                    Continue with Google
+                  </>
+                )}
               </Button>
 
               <div className="mt-6 text-center">
