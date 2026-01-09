@@ -1,7 +1,23 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Shirt, Watch, Palette, Glasses, Crown, Gem } from "lucide-react";
 import { toast } from "sonner";
+
+// Import sample product images
+import blackTshirt from "@/assets/products/black-tshirt.jpg";
+import redDress from "@/assets/products/red-dress.jpg";
+import denimJacket from "@/assets/products/denim-jacket.jpg";
+import silverWatch from "@/assets/products/silver-watch.jpg";
+import leatherHandbag from "@/assets/products/leather-handbag.jpg";
+import leatherBelt from "@/assets/products/leather-belt.jpg";
+import silkScarf from "@/assets/products/silk-scarf.jpg";
+import blackSunglasses from "@/assets/products/black-sunglasses.jpg";
+import goldSmartwatch from "@/assets/products/gold-smartwatch.jpg";
+import roseGoldSmartwatch from "@/assets/products/rose-gold-smartwatch.jpg";
+import diamondRing from "@/assets/products/diamond-ring.jpg";
+import goldNecklace from "@/assets/products/gold-necklace.jpg";
+import pearlEarrings from "@/assets/products/pearl-earrings.jpg";
 
 const categories = [
   {
@@ -11,6 +27,11 @@ const categories = [
     description: "Dresses, shirts, pants, and more",
     color: "text-primary",
     bgColor: "bg-primary/10",
+    sampleProducts: [
+      { name: "Black T-Shirt", image: blackTshirt },
+      { name: "Red Dress", image: redDress },
+      { name: "Denim Jacket", image: denimJacket },
+    ],
   },
   {
     id: "accessories",
@@ -19,6 +40,11 @@ const categories = [
     description: "Watches, jewelry, bags",
     color: "text-accent",
     bgColor: "bg-accent/10",
+    sampleProducts: [
+      { name: "Silver Watch", image: silverWatch },
+      { name: "Leather Handbag", image: leatherHandbag },
+      { name: "Leather Belt", image: leatherBelt },
+    ],
   },
   {
     id: "cosmetics",
@@ -27,6 +53,11 @@ const categories = [
     description: "Makeup, skincare, beauty",
     color: "text-success",
     bgColor: "bg-success/10",
+    sampleProducts: [
+      { name: "Silk Scarf", image: silkScarf },
+      { name: "Pearl Earrings", image: pearlEarrings },
+      { name: "Gold Necklace", image: goldNecklace },
+    ],
   },
   {
     id: "eyewear",
@@ -35,6 +66,11 @@ const categories = [
     description: "Glasses, sunglasses, contacts",
     color: "text-warning",
     bgColor: "bg-warning/10",
+    sampleProducts: [
+      { name: "Black Sunglasses", image: blackSunglasses },
+      { name: "Black Sunglasses", image: blackSunglasses },
+      { name: "Black Sunglasses", image: blackSunglasses },
+    ],
   },
   {
     id: "luxury",
@@ -43,6 +79,11 @@ const categories = [
     description: "High-end fashion & accessories",
     color: "text-accent",
     bgColor: "bg-accent/10",
+    sampleProducts: [
+      { name: "Gold Smartwatch", image: goldSmartwatch },
+      { name: "Rose Gold Smartwatch", image: roseGoldSmartwatch },
+      { name: "Leather Handbag", image: leatherHandbag },
+    ],
   },
   {
     id: "jewelry",
@@ -51,6 +92,11 @@ const categories = [
     description: "Rings, necklaces, earrings",
     color: "text-primary-glow",
     bgColor: "bg-primary/10",
+    sampleProducts: [
+      { name: "Diamond Ring", image: diamondRing },
+      { name: "Gold Necklace", image: goldNecklace },
+      { name: "Pearl Earrings", image: pearlEarrings },
+    ],
   },
 ];
 
@@ -61,6 +107,8 @@ interface CategorySelectorProps {
 }
 
 export const CategorySelector = ({ selectedCategory, onSelectCategory, onContinueToTrial }: CategorySelectorProps) => {
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+
   const handleContinueToTrial = () => {
     if (!selectedCategory) {
       toast.error("Please select a category first!");
@@ -90,16 +138,19 @@ export const CategorySelector = ({ selectedCategory, onSelectCategory, onContinu
           {categories.map((category) => {
             const IconComponent = category.icon;
             const isSelected = selectedCategory === category.id;
+            const isHovered = hoveredCategory === category.id;
             
             return (
               <Card 
                 key={category.id}
-                className={`group p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-card bg-gradient-card ${
+                className={`group relative p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-card bg-gradient-card overflow-visible ${
                   isSelected 
                     ? 'border-accent shadow-accent-glow' 
                     : 'border-border hover:border-accent/50'
                 }`}
                 onClick={() => onSelectCategory(category.id)}
+                onMouseEnter={() => setHoveredCategory(category.id)}
+                onMouseLeave={() => setHoveredCategory(null)}
               >
                 <div className="text-center">
                   <div className={`w-16 h-16 rounded-full ${category.bgColor} flex items-center justify-center mx-auto mb-4 transition-transform duration-300 group-hover:scale-110`}>
@@ -129,6 +180,47 @@ export const CategorySelector = ({ selectedCategory, onSelectCategory, onContinu
                     <div className="w-2 h-2 bg-background rounded-full" />
                   </div>
                 )}
+
+                {/* Hover Preview */}
+                <div 
+                  className={`absolute left-1/2 -translate-x-1/2 top-full mt-3 z-50 transition-all duration-300 pointer-events-none ${
+                    isHovered 
+                      ? 'opacity-100 translate-y-0' 
+                      : 'opacity-0 -translate-y-2'
+                  }`}
+                >
+                  <div className="bg-card border border-border rounded-xl p-3 shadow-lg backdrop-blur-sm">
+                    <p className="text-xs text-muted-foreground mb-2 text-center font-medium">
+                      Sample Products
+                    </p>
+                    <div className="flex gap-2">
+                      {category.sampleProducts.map((product, index) => (
+                        <div 
+                          key={index}
+                          className="relative group/product"
+                          style={{ 
+                            animationDelay: `${index * 50}ms`,
+                          }}
+                        >
+                          <div className="w-16 h-16 rounded-lg overflow-hidden border border-border/50 bg-muted transition-transform duration-200 hover:scale-110">
+                            <img 
+                              src={product.image} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/product:opacity-100 transition-opacity whitespace-nowrap">
+                            <span className="text-[10px] bg-background/90 px-1.5 py-0.5 rounded text-foreground border border-border/50">
+                              {product.name}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Arrow */}
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-card border-l border-t border-border rotate-45" />
+                  </div>
+                </div>
               </Card>
             );
           })}
