@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,15 @@ import { VirtualTryOnInterface } from "@/components/VirtualTryOnInterface";
 import { ProductGallery } from "@/components/ProductGallery";
 import { StyleRecommendations } from "@/components/StyleRecommendations";
 import { UserMeasurementsForm } from "@/components/UserMeasurementsForm";
+import { ShoppingCart, CartItem } from "@/components/ShoppingCart";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProductForTryOn, setSelectedProductForTryOn] = useState<{ name: string; image: string } | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -26,7 +29,6 @@ const Index = () => {
   }, [user, loading, navigate]);
 
   const handleStartTrial = () => {
-    // Auto-scroll to virtual trial interface
     setTimeout(() => {
       document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
         behavior: 'smooth' 
@@ -35,7 +37,6 @@ const Index = () => {
   };
 
   const handleContinueToTrial = () => {
-    // Additional logic when continuing from category selector
     setTimeout(() => {
       document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
         behavior: 'smooth' 
@@ -51,6 +52,46 @@ const Index = () => {
       });
     }, 100);
   };
+
+  const handleAddToCart = useCallback((product: {
+    id: string;
+    name: string;
+    brand: string;
+    price: number;
+    originalPrice?: number;
+    image: string;
+  }) => {
+    setCartItems(prev => {
+      const existingItem = prev.find(item => item.id === product.id);
+      if (existingItem) {
+        toast.success(`Updated ${product.name} quantity in cart`);
+        return prev.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      toast.success(`${product.name} added to cart!`);
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  }, []);
+
+  const handleUpdateQuantity = useCallback((id: string, quantity: number) => {
+    setCartItems(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, quantity } : item
+      )
+    );
+  }, []);
+
+  const handleRemoveFromCart = useCallback((id: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== id));
+    toast.success("Item removed from cart");
+  }, []);
+
+  const handleClearCart = useCallback(() => {
+    setCartItems([]);
+  }, []);
 
   if (loading) {
     return (
@@ -70,6 +111,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <ShoppingCart
+          items={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveFromCart}
+          onClearCart={handleClearCart}
+        />
+        
         <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="glass" size="sm" className="gap-2">
@@ -102,6 +150,7 @@ const Index = () => {
       <ProductGallery 
         selectedCategory={selectedCategory || undefined}
         onProductTryOn={handleProductTryOn}
+        onAddToCart={handleAddToCart}
       />
       <StyleRecommendations />
       <Toaster />

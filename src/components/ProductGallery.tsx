@@ -535,11 +535,18 @@ const priceRanges = [
 interface ProductGalleryProps {
   selectedCategory?: string;
   onProductTryOn?: (productName: string, productImage: string) => void;
+  onAddToCart?: (product: {
+    id: string;
+    name: string;
+    brand: string;
+    price: number;
+    originalPrice?: number;
+    image: string;
+  }) => void;
 }
 
-export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGalleryProps) => {
+export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }: ProductGalleryProps) => {
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [cart, setCart] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -609,9 +616,17 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGall
     }
   };
 
-  const handleAddToCart = (productId: string, productName: string) => {
-    setCart(prev => [...prev, productId]);
-    toast.success(`${productName} added to cart!`);
+  const handleAddToCartClick = (product: Product) => {
+    if (onAddToCart) {
+      onAddToCart({
+        id: product.id,
+        name: product.name,
+        brand: product.brand,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        image: product.image,
+      });
+    }
   };
 
   const handleBuyNow = (product: Product) => {
@@ -923,7 +938,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn }: ProductGall
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleAddToCart(product.id, product.name)}
+                      onClick={() => handleAddToCartClick(product)}
                     >
                       <ShoppingCart className="w-4 h-4" />
                     </Button>
