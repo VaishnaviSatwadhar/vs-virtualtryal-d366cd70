@@ -3,14 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Shirt, Watch, Palette, Glasses, Crown, Gem } from "lucide-react";
 import { toast } from "sonner";
 
-// Import category images
-import clothingImg from "@/assets/products/red-dress.jpg";
-import accessoriesImg from "@/assets/products/leather-handbag.jpg";
-import cosmeticsImg from "@/assets/products/silk-scarf.jpg";
-import eyewearImg from "@/assets/products/black-sunglasses.jpg";
-import luxuryImg from "@/assets/products/gold-smartwatch.jpg";
-import jewelryImg from "@/assets/products/diamond-ring.jpg";
-
 const categories = [
   {
     id: "clothing",
@@ -19,7 +11,6 @@ const categories = [
     description: "Dresses, shirts, pants, and more",
     color: "text-primary",
     bgColor: "bg-primary/10",
-    image: clothingImg,
   },
   {
     id: "accessories",
@@ -28,7 +19,6 @@ const categories = [
     description: "Watches, jewelry, bags",
     color: "text-accent",
     bgColor: "bg-accent/10",
-    image: accessoriesImg,
   },
   {
     id: "cosmetics",
@@ -37,7 +27,6 @@ const categories = [
     description: "Makeup, skincare, beauty",
     color: "text-success",
     bgColor: "bg-success/10",
-    image: cosmeticsImg,
   },
   {
     id: "eyewear",
@@ -46,7 +35,6 @@ const categories = [
     description: "Glasses, sunglasses, contacts",
     color: "text-warning",
     bgColor: "bg-warning/10",
-    image: eyewearImg,
   },
   {
     id: "luxury",
@@ -55,7 +43,6 @@ const categories = [
     description: "High-end fashion & accessories",
     color: "text-accent",
     bgColor: "bg-accent/10",
-    image: luxuryImg,
   },
   {
     id: "jewelry",
@@ -64,7 +51,6 @@ const categories = [
     description: "Rings, necklaces, earrings",
     color: "text-primary-glow",
     bgColor: "bg-primary/10",
-    image: jewelryImg,
   },
 ];
 
@@ -82,11 +68,11 @@ export const CategorySelector = ({ selectedCategory, onSelectCategory, onContinu
     }
     toast.success("Great choice! Let's start your virtual trial.");
     onContinueToTrial?.();
-    // Scroll to virtual trial interface
     document.querySelector('#virtual-trial-interface')?.scrollIntoView({ 
       behavior: 'smooth' 
     });
   };
+
   return (
     <section className="py-16 px-6">
       <div className="max-w-6xl mx-auto">
@@ -108,41 +94,23 @@ export const CategorySelector = ({ selectedCategory, onSelectCategory, onContinu
             return (
               <Card 
                 key={category.id}
-                className={`group relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-card ${
+                className={`group p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-card bg-gradient-card ${
                   isSelected 
                     ? 'border-accent shadow-accent-glow' 
                     : 'border-border hover:border-accent/50'
                 }`}
                 onClick={() => onSelectCategory(category.id)}
               >
-                {/* Category Image */}
-                <div className="relative h-40 overflow-hidden">
-                  <img 
-                    src={category.image} 
-                    alt={category.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-                  
-                  {/* Icon Badge */}
-                  <div className={`absolute top-3 left-3 w-10 h-10 rounded-full ${category.bgColor} flex items-center justify-center backdrop-blur-sm`}>
-                    <IconComponent className={`w-5 h-5 ${category.color}`} />
+                <div className="text-center">
+                  <div className={`w-16 h-16 rounded-full ${category.bgColor} flex items-center justify-center mx-auto mb-4 transition-transform duration-300 group-hover:scale-110`}>
+                    <IconComponent className={`w-8 h-8 ${category.color}`} />
                   </div>
                   
-                  {/* Selection Indicator */}
-                  {isSelected && (
-                    <div className="absolute top-3 right-3 w-6 h-6 bg-accent rounded-full flex items-center justify-center animate-pulse-glow">
-                      <div className="w-2 h-2 bg-background rounded-full" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold text-foreground mb-1">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     {category.name}
                   </h3>
                   
-                  <p className="text-muted-foreground text-sm mb-3">
+                  <p className="text-muted-foreground text-sm mb-4">
                     {category.description}
                   </p>
                   
@@ -155,8 +123,12 @@ export const CategorySelector = ({ selectedCategory, onSelectCategory, onContinu
                   </Button>
                 </div>
 
-                {/* Hover Effect */}
-                <div className="absolute inset-0 bg-gradient-accent opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none" />
+                {/* Selection Indicator */}
+                {isSelected && (
+                  <div className="absolute top-3 right-3 w-6 h-6 bg-accent rounded-full flex items-center justify-center animate-pulse-glow">
+                    <div className="w-2 h-2 bg-background rounded-full" />
+                  </div>
+                )}
               </Card>
             );
           })}
