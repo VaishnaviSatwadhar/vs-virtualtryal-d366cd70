@@ -11,6 +11,7 @@ import { ProductGallery } from "@/components/ProductGallery";
 import { StyleRecommendations } from "@/components/StyleRecommendations";
 import { UserMeasurementsForm } from "@/components/UserMeasurementsForm";
 import { ShoppingCart, CartItem } from "@/components/ShoppingCart";
+import { Wishlist } from "@/components/Wishlist";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -111,6 +112,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <Wishlist
+          onTryOn={handleProductTryOn}
+        />
+        
         <ShoppingCart
           items={cartItems}
           onUpdateQuantity={handleUpdateQuantity}
