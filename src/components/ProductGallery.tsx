@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useWishlist } from "@/hooks/useWishlist";
 import { 
-  Heart, 
+  Heart,
   ShoppingCart, 
   Eye, 
   Star,
@@ -546,7 +547,7 @@ interface ProductGalleryProps {
 }
 
 export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }: ProductGalleryProps) => {
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const { isInWishlist, addToWishlist, removeFromWishlist, getWishlistItemByName } = useWishlist();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -637,12 +638,13 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     toast.info("Loading more products...");
   };
 
-  const toggleFavorite = (productId: string) => {
-    setFavorites(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
+  const toggleFavorite = async (product: Product) => {
+    const existingItem = getWishlistItemByName(product.name);
+    if (existingItem) {
+      await removeFromWishlist(existingItem.id);
+    } else {
+      await addToWishlist(product.name, product.image, product.category);
+    }
   };
 
   const toggleCategory = (category: string) => {
@@ -837,12 +839,14 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
                 <Button
                   variant="glass" 
                   size="icon"
-                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => toggleFavorite(product.id)}
+                  className={`absolute top-3 right-3 transition-opacity ${
+                    isInWishlist(product.name) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  }`}
+                  onClick={() => toggleFavorite(product)}
                 >
                   <Heart 
                     className={`w-4 h-4 transition-colors ${
-                      favorites.includes(product.id) ? 'fill-destructive text-destructive' : 'text-muted-foreground'
+                      isInWishlist(product.name) ? 'fill-destructive text-destructive' : 'text-muted-foreground'
                     }`} 
                   />
                 </Button>
