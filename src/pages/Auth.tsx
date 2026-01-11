@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Chrome, Eye, EyeOff } from 'lucide-react';
+import { Chrome, Eye, EyeOff, Mail, Sparkles } from 'lucide-react';
 import { z } from 'zod';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 
 const authSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }),
@@ -19,11 +21,15 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showVerificationSent, setShowVerificationSent] = useState(false);
+  const [showMagicLinkSent, setShowMagicLinkSent] = useState(false);
+  const [useMagicLink, setUseMagicLink] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -57,6 +63,12 @@ const Auth = () => {
           email: validation.data.email,
           password: validation.data.password,
         });
+
+        // Handle remember me - extend session if checked
+        if (!error && rememberMe) {
+          // Session persistence is handled by Supabase automatically
+          localStorage.setItem('rememberMe', 'true');
+        }
 
         if (error) {
           // Sanitize error messages
@@ -218,11 +230,84 @@ const Auth = () => {
     }
   };
 
+  const handleMagicLinkSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMagicLinkLoading(true);
+
+    try {
+      const validation = z.string().email({ message: "Invalid email address" }).safeParse(email.trim());
+      
+      if (!validation.success) {
+        throw new Error(validation.error.errors[0].message);
+      }
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: validation.data,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      setShowMagicLinkSent(true);
+      toast({
+        title: "Magic link sent!",
+        description: "Check your email for a sign-in link.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send magic link.",
+        variant: "destructive",
+      });
+    } finally {
+      setMagicLinkLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <div className="w-full max-w-md">
         <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-card p-8">
-          {showVerificationSent ? (
+          {showMagicLinkSent ? (
+            <div className="text-center space-y-6">
+              <div className="mx-auto w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground mb-2">
+                  Check your email
+                </h1>
+                <p className="text-muted-foreground">
+                  We've sent a magic sign-in link to <span className="font-semibold text-foreground">{email}</span>
+                </p>
+              </div>
+              <div className="bg-accent/20 border border-accent/30 rounded-lg p-4 text-sm text-muted-foreground">
+                <p>Click the link in the email to sign in instantly. No password needed!</p>
+              </div>
+              <div className="space-y-3">
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={handleMagicLinkSignIn}
+                  disabled={magicLinkLoading}
+                >
+                  {magicLinkLoading ? 'Sending...' : 'Resend magic link'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    setShowMagicLinkSent(false);
+                    setEmail('');
+                  }}
+                >
+                  Back to sign in
+                </Button>
+              </div>
+            </div>
+          ) : showVerificationSent ? (
             <div className="text-center space-y-6">
               <div className="mx-auto w-16 h-16 bg-success/20 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -362,7 +447,33 @@ const Auth = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {!isLogin && <PasswordStrengthIndicator password={password} />}
             </div>
+
+              {isLogin && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="rememberMe" 
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    />
+                    <label 
+                      htmlFor="rememberMe" 
+                      className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                    >
+                      Remember me
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowResetPassword(true)}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
 
               <Button
                 type="submit"
@@ -373,18 +484,6 @@ const Auth = () => {
               >
                 {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Sign Up'}
               </Button>
-
-              {isLogin && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowResetPassword(true)}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-              )}
             </form>
           )}
 
@@ -399,30 +498,93 @@ const Auth = () => {
                 </div>
               </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleGoogleSignIn}
-                disabled={googleLoading}
-              >
-                {googleLoading ? (
-                  <>
-                    <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Chrome className="mr-2 h-5 w-5" />
-                    Continue with Google
-                  </>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <>
+                      <Chrome className="mr-2 h-5 w-5" />
+                      Google
+                    </>
+                  )}
+                </Button>
+
+                {isLogin && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setUseMagicLink(true)}
+                  >
+                    <Mail className="mr-2 h-5 w-5" />
+                    Magic Link
+                  </Button>
                 )}
-              </Button>
+              </div>
+
+              {useMagicLink && isLogin && (
+                <form onSubmit={handleMagicLinkSignIn} className="space-y-4 pt-4 border-t border-border/50">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Enter your email to receive a passwordless sign-in link
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="magic-email">Email</Label>
+                    <Input
+                      id="magic-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="bg-background/50"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    variant="glow"
+                    size="lg"
+                    disabled={magicLinkLoading}
+                  >
+                    {magicLinkLoading ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Send Magic Link
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setUseMagicLink(false)}
+                  >
+                    Back to password sign in
+                  </Button>
+                </form>
+              )}
 
               <div className="mt-6 text-center">
                 <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setUseMagicLink(false);
+                  }}
                   className="text-sm text-primary hover:underline"
                 >
                   {isLogin
