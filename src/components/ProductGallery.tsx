@@ -26,6 +26,7 @@ import {
   Flame
 } from "lucide-react";
 import { toast } from "sonner";
+import { CheckoutModal } from "./CheckoutModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -957,6 +958,8 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
   const [showOnlyNew, setShowOnlyNew] = useState(false);
   const [showOnlySale, setShowOnlySale] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   // Filtered products based on current filters
   const filteredProducts = useMemo(() => {
@@ -1044,7 +1047,8 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
   };
 
   const handleBuyNow = (product: Product) => {
-    toast.success(`Proceeding to checkout for ${product.name}`);
+    setCheckoutProduct(product);
+    setCheckoutOpen(true);
   };
 
   const toggleFavorite = async (product: Product) => {
@@ -1404,6 +1408,13 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Checkout Modal */}
+        <CheckoutModal
+          open={checkoutOpen}
+          onOpenChange={setCheckoutOpen}
+          product={checkoutProduct}
+        />
       </div>
     </section>
   );
