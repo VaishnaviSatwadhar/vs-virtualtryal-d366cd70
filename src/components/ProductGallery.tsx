@@ -18,7 +18,12 @@ import {
   SlidersHorizontal,
   Glasses,
   Crown,
-  Gem
+  Gem,
+  Sparkles,
+  TrendingUp,
+  Tag,
+  ChevronRight,
+  Flame
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -29,6 +34,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
@@ -71,9 +77,12 @@ interface Product {
   sizes?: string[];
   isNew?: boolean;
   isOnSale?: boolean;
+  isFeatured?: boolean;
+  isTrending?: boolean;
 }
 
 const products: Product[] = [
+  // Featured Products
   {
     id: "1",
     name: "Classic Black T-Shirt",
@@ -87,6 +96,7 @@ const products: Product[] = [
     colors: ["#000000", "#FFFFFF", "#FF6B6B", "#4ECDC4"],
     sizes: ["XS", "S", "M", "L", "XL"],
     isOnSale: true,
+    isFeatured: true,
   },
   {
     id: "2", 
@@ -99,6 +109,8 @@ const products: Product[] = [
     image: silverWatch,
     colors: ["#C0C0C0", "#000000", "#FFD700"],
     isNew: true,
+    isFeatured: true,
+    isTrending: true,
   },
   {
     id: "3",
@@ -110,6 +122,8 @@ const products: Product[] = [
     category: 'luxury',
     image: goldSmartwatch,
     colors: ["#FFD700", "#000000", "#C0C0C0"],
+    isFeatured: true,
+    isTrending: true,
   },
   {
     id: "4",
@@ -136,6 +150,7 @@ const products: Product[] = [
     image: redDress,
     colors: ["#DC2626", "#000000", "#FFFFFF"],
     sizes: ["XS", "S", "M", "L"],
+    isTrending: true,
   },
   {
     id: "6",
@@ -160,6 +175,7 @@ const products: Product[] = [
     image: leatherHandbag,
     colors: ["#8B4513", "#000000", "#FFFFFF"],
     isNew: true,
+    isFeatured: true,
   },
   {
     id: "8",
@@ -173,6 +189,7 @@ const products: Product[] = [
     image: goldNecklace,
     colors: ["#FFD700", "#C0C0C0"],
     isOnSale: true,
+    isTrending: true,
   },
   {
     id: "9",
@@ -184,6 +201,7 @@ const products: Product[] = [
     category: 'eyewear',
     image: blackSunglasses,
     colors: ["#000000", "#8B4513", "#4169E1"],
+    isFeatured: true,
   },
   {
     id: "10",
@@ -196,6 +214,7 @@ const products: Product[] = [
     image: denimJacket,
     colors: ["#4169E1", "#1E3A8A", "#000000"],
     sizes: ["S", "M", "L", "XL"],
+    isTrending: true,
   },
   {
     id: "11",
@@ -233,6 +252,7 @@ const products: Product[] = [
     image: pearlEarrings,
     colors: ["#FFFFFF", "#FFD700"],
     isNew: true,
+    isFeatured: true,
   },
   {
     id: "14",
@@ -271,6 +291,7 @@ const products: Product[] = [
     colors: ["#065F46", "#000000", "#8B4513"],
     sizes: ["S", "M", "L", "XL"],
     isNew: true,
+    isTrending: true,
   },
   {
     id: "17",
@@ -283,6 +304,7 @@ const products: Product[] = [
     image: diamondRing,
     colors: ["#C0C0C0", "#FFD700"],
     isNew: true,
+    isFeatured: true,
   },
   {
     id: "18",
@@ -308,6 +330,7 @@ const products: Product[] = [
     image: yellowDress,
     colors: ["#FCD34D", "#FDE047", "#FBBF24"],
     sizes: ["XS", "S", "M", "L"],
+    isNew: true,
   },
   {
     id: "20",
@@ -358,6 +381,8 @@ const products: Product[] = [
     image: roseGoldSmartwatch,
     colors: ["#E0BFB8", "#000000", "#C0C0C0"],
     isNew: true,
+    isFeatured: true,
+    isTrending: true,
   },
   {
     id: "24",
@@ -383,6 +408,7 @@ const products: Product[] = [
     image: crossbodyBag,
     colors: ["#8B4513", "#000000", "#DC2626"],
     isOnSale: true,
+    isTrending: true,
   },
   {
     id: "26",
@@ -422,6 +448,7 @@ const products: Product[] = [
     image: blackSunglasses,
     colors: ["#FFD700", "#C0C0C0", "#000000"],
     isNew: true,
+    isFeatured: true,
   },
   {
     id: "29",
@@ -433,6 +460,7 @@ const products: Product[] = [
     category: 'luxury',
     image: silverBracelet,
     colors: ["#C0C0C0", "#FFD700"],
+    isFeatured: true,
   },
   {
     id: "30",
@@ -469,6 +497,7 @@ const products: Product[] = [
     category: 'jewelry',
     image: diamondRing,
     colors: ["#E5E7EB", "#FFD700"],
+    isFeatured: true,
   },
   {
     id: "33",
@@ -504,6 +533,179 @@ const products: Product[] = [
     image: pearlEarrings,
     colors: ["#065F46", "#FFD700"],
     isNew: true,
+    isTrending: true,
+  },
+  // Additional Products
+  {
+    id: "36",
+    name: "Cashmere Sweater",
+    brand: "LuxeKnit",
+    price: 189.99,
+    rating: 4.9,
+    reviews: 234,
+    category: 'clothing',
+    image: grayCardigan,
+    colors: ["#D4C4B0", "#000000", "#FFFFFF"],
+    sizes: ["S", "M", "L", "XL"],
+    isNew: true,
+    isFeatured: true,
+  },
+  {
+    id: "37",
+    name: "Titanium Sport Watch",
+    brand: "ActiveTime",
+    price: 279.99,
+    rating: 4.8,
+    reviews: 189,
+    category: 'accessories',
+    image: goldSmartwatch,
+    colors: ["#374151", "#000000"],
+    isNew: true,
+    isTrending: true,
+  },
+  {
+    id: "38",
+    name: "Designer Tote Bag",
+    brand: "ChicCarry",
+    price: 249.99,
+    originalPrice: 329.99,
+    rating: 4.7,
+    reviews: 156,
+    category: 'luxury',
+    image: leatherHandbag,
+    colors: ["#000000", "#8B4513", "#DC2626"],
+    isOnSale: true,
+    isFeatured: true,
+  },
+  {
+    id: "39",
+    name: "Sapphire Pendant",
+    brand: "RoyalGems",
+    price: 399.99,
+    rating: 4.9,
+    reviews: 67,
+    category: 'jewelry',
+    image: goldNecklace,
+    colors: ["#1E40AF", "#C0C0C0"],
+    isNew: true,
+    isFeatured: true,
+  },
+  {
+    id: "40",
+    name: "Retro Cat Eye Glasses",
+    brand: "VintageVision",
+    price: 89.99,
+    rating: 4.6,
+    reviews: 145,
+    category: 'eyewear',
+    image: blackSunglasses,
+    colors: ["#DC2626", "#000000", "#8B4513"],
+    isTrending: true,
+  },
+  {
+    id: "41",
+    name: "Linen Summer Shirt",
+    brand: "BeachWear",
+    price: 54.99,
+    originalPrice: 74.99,
+    rating: 4.5,
+    reviews: 267,
+    category: 'clothing',
+    image: whiteHoodie,
+    colors: ["#FFFFFF", "#87CEEB", "#F5DEB3"],
+    sizes: ["S", "M", "L", "XL"],
+    isOnSale: true,
+  },
+  {
+    id: "42",
+    name: "Canvas Backpack",
+    brand: "UrbanCarry",
+    price: 79.99,
+    rating: 4.4,
+    reviews: 312,
+    category: 'accessories',
+    image: crossbodyBag,
+    colors: ["#374151", "#8B4513", "#000000"],
+    isTrending: true,
+  },
+  {
+    id: "43",
+    name: "Crystal Drop Necklace",
+    brand: "SparkleJewels",
+    price: 129.99,
+    rating: 4.7,
+    reviews: 98,
+    category: 'jewelry',
+    image: goldNecklace,
+    colors: ["#E5E7EB", "#FFD700"],
+    isNew: true,
+  },
+  {
+    id: "44",
+    name: "Leather Loafers",
+    brand: "ClassicStep",
+    price: 179.99,
+    rating: 4.8,
+    reviews: 156,
+    category: 'clothing',
+    image: blackBoots,
+    colors: ["#8B4513", "#000000"],
+    sizes: ["7", "8", "9", "10", "11", "12"],
+    isFeatured: true,
+  },
+  {
+    id: "45",
+    name: "Smart Fitness Band",
+    brand: "FitTech",
+    price: 149.99,
+    originalPrice: 199.99,
+    rating: 4.6,
+    reviews: 423,
+    category: 'accessories',
+    image: roseGoldSmartwatch,
+    colors: ["#000000", "#DC2626", "#1E3A8A"],
+    isOnSale: true,
+    isTrending: true,
+  },
+  {
+    id: "46",
+    name: "Wool Blend Coat",
+    brand: "WinterStyle",
+    price: 249.99,
+    rating: 4.9,
+    reviews: 187,
+    category: 'clothing',
+    image: greenJacket,
+    colors: ["#374151", "#000000", "#8B4513"],
+    sizes: ["S", "M", "L", "XL"],
+    isNew: true,
+    isFeatured: true,
+  },
+  {
+    id: "47",
+    name: "Polarized Sport Shades",
+    brand: "ActiveVision",
+    price: 119.99,
+    rating: 4.7,
+    reviews: 234,
+    category: 'eyewear',
+    image: blackSunglasses,
+    colors: ["#000000", "#1E3A8A"],
+    isNew: true,
+  },
+  {
+    id: "48",
+    name: "Ruby Stud Earrings",
+    brand: "GemStone",
+    price: 279.99,
+    originalPrice: 349.99,
+    rating: 4.8,
+    reviews: 89,
+    category: 'jewelry',
+    image: pearlEarrings,
+    colors: ["#DC2626", "#FFD700"],
+    isOnSale: true,
+    isFeatured: true,
   },
 ];
 
@@ -546,6 +748,206 @@ interface ProductGalleryProps {
   }) => void;
 }
 
+// Product Card Component
+const ProductCard = ({ 
+  product, 
+  onTryOn, 
+  onAddToCart, 
+  onBuyNow,
+  onToggleFavorite,
+  isWishlisted 
+}: { 
+  product: Product; 
+  onTryOn: (product: Product) => void;
+  onAddToCart: (product: Product) => void;
+  onBuyNow: (product: Product) => void;
+  onToggleFavorite: (product: Product) => void;
+  isWishlisted: boolean;
+}) => (
+  <Card className="group bg-gradient-card border-border overflow-hidden hover:shadow-card hover:scale-[1.02] transition-all duration-300">
+    {/* Product Image */}
+    <div className="aspect-square bg-muted/20 relative overflow-hidden">
+      <img 
+        src={product.image} 
+        alt={product.name}
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+      />
+      
+      {/* Badges */}
+      <div className="absolute top-3 left-3 flex flex-col gap-2">
+        {product.isNew && (
+          <Badge className="bg-success text-success-foreground">New</Badge>
+        )}
+        {product.isOnSale && (
+          <Badge className="bg-destructive text-destructive-foreground">Sale</Badge>
+        )}
+        {product.isTrending && (
+          <Badge className="bg-warning text-warning-foreground">
+            <Flame className="w-3 h-3 mr-1" />
+            Hot
+          </Badge>
+        )}
+      </div>
+
+      {/* Favorite Button */}
+      <Button
+        variant="glass" 
+        size="icon"
+        className={`absolute top-3 right-3 transition-opacity ${
+          isWishlisted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}
+        onClick={() => onToggleFavorite(product)}
+      >
+        <Heart 
+          className={`w-4 h-4 transition-colors ${
+            isWishlisted ? 'fill-destructive text-destructive' : 'text-muted-foreground'
+          }`} 
+        />
+      </Button>
+
+      {/* Hover Actions */}
+      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        <Button variant="glow" size="sm" onClick={() => onTryOn(product)}>
+          <Eye className="w-4 h-4" />
+          Try On
+        </Button>
+      </div>
+    </div>
+
+    {/* Product Info */}
+    <div className="p-4">
+      <div className="mb-2">
+        <h3 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors line-clamp-1">
+          {product.name}
+        </h3>
+        <p className="text-xs text-muted-foreground">{product.brand}</p>
+      </div>
+
+      {/* Rating */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center">
+          <Star className="w-3 h-3 fill-warning text-warning" />
+          <span className="text-xs font-medium text-foreground ml-1">
+            {product.rating}
+          </span>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          ({product.reviews})
+        </span>
+      </div>
+
+      {/* Colors */}
+      <div className="flex items-center gap-1 mb-3">
+        {product.colors.slice(0, 4).map((color, index) => (
+          <div 
+            key={index}
+            className="w-3 h-3 rounded-full border border-border"
+            style={{ backgroundColor: color }}
+          />
+        ))}
+        {product.colors.length > 4 && (
+          <span className="text-xs text-muted-foreground">+{product.colors.length - 4}</span>
+        )}
+      </div>
+
+      {/* Price and Actions */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base font-bold text-foreground">
+            ${product.price}
+          </span>
+          {product.originalPrice && (
+            <span className="text-xs text-muted-foreground line-through">
+              ${product.originalPrice}
+            </span>
+          )}
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="hero" 
+            size="sm" 
+            className="flex-1 text-xs"
+            onClick={() => onBuyNow(product)}
+          >
+            Buy Now
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onAddToCart(product)}
+          >
+            <ShoppingCart className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  </Card>
+);
+
+// Section Header Component
+const SectionHeader = ({ 
+  icon: Icon, 
+  title, 
+  subtitle,
+  onViewAll 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  subtitle?: string;
+  onViewAll?: () => void;
+}) => (
+  <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <div>
+        <h3 className="text-xl font-bold text-foreground">{title}</h3>
+        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
+    </div>
+    {onViewAll && (
+      <Button variant="ghost" size="sm" onClick={onViewAll}>
+        View All
+        <ChevronRight className="w-4 h-4 ml-1" />
+      </Button>
+    )}
+  </div>
+);
+
+// Horizontal Scroll Section
+const HorizontalProductSection = ({ 
+  products, 
+  onTryOn, 
+  onAddToCart, 
+  onBuyNow,
+  onToggleFavorite,
+  isInWishlist 
+}: {
+  products: Product[];
+  onTryOn: (product: Product) => void;
+  onAddToCart: (product: Product) => void;
+  onBuyNow: (product: Product) => void;
+  onToggleFavorite: (product: Product) => void;
+  isInWishlist: (name: string) => boolean;
+}) => (
+  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+    {products.map((product) => (
+      <div key={product.id} className="flex-shrink-0 w-64">
+        <ProductCard
+          product={product}
+          onTryOn={onTryOn}
+          onAddToCart={onAddToCart}
+          onBuyNow={onBuyNow}
+          onToggleFavorite={onToggleFavorite}
+          isWishlisted={isInWishlist(product.name)}
+        />
+      </div>
+    ))}
+  </div>
+);
+
 export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }: ProductGalleryProps) => {
   const { isInWishlist, addToWishlist, removeFromWishlist, getWishlistItemByName } = useWishlist();
   const [searchQuery, setSearchQuery] = useState("");
@@ -554,21 +956,20 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
   const [showOnlyNew, setShowOnlyNew] = useState(false);
   const [showOnlySale, setShowOnlySale] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
 
+  // Filtered products based on current filters
   const filteredProducts = useMemo(() => {
     let result = products;
 
-    // Filter by selected category from parent
     if (selectedCategory) {
       result = result.filter(product => product.category === selectedCategory);
     }
 
-    // Filter by selected categories from dropdown
     if (selectedCategories.length > 0) {
       result = result.filter(product => selectedCategories.includes(product.category));
     }
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(product => 
@@ -578,7 +979,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
       );
     }
 
-    // Filter by price ranges
     if (selectedPriceRanges.length > 0) {
       result = result.filter(product => 
         selectedPriceRanges.some(rangeIndex => {
@@ -588,7 +988,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
       );
     }
 
-    // Filter by new/sale
     if (showOnlyNew) {
       result = result.filter(product => product.isNew);
     }
@@ -598,6 +997,20 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
 
     return result;
   }, [selectedCategory, selectedCategories, searchQuery, selectedPriceRanges, showOnlyNew, showOnlySale]);
+
+  // Categorized products
+  const featuredProducts = useMemo(() => products.filter(p => p.isFeatured), []);
+  const newArrivals = useMemo(() => products.filter(p => p.isNew), []);
+  const trendingProducts = useMemo(() => products.filter(p => p.isTrending), []);
+  const saleProducts = useMemo(() => products.filter(p => p.isOnSale), []);
+  
+  const productsByCategory = useMemo(() => ({
+    clothing: products.filter(p => p.category === 'clothing'),
+    accessories: products.filter(p => p.category === 'accessories'),
+    jewelry: products.filter(p => p.category === 'jewelry'),
+    luxury: products.filter(p => p.category === 'luxury'),
+    eyewear: products.filter(p => p.category === 'eyewear'),
+  }), []);
 
   const clearFilters = () => {
     setSelectedCategories([]);
@@ -632,10 +1045,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
 
   const handleBuyNow = (product: Product) => {
     toast.success(`Proceeding to checkout for ${product.name}`);
-  };
-
-  const handleLoadMore = () => {
-    toast.info("Loading more products...");
   };
 
   const toggleFavorite = async (product: Product) => {
@@ -678,7 +1087,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
           </div>
           
           <div className="flex gap-3 mt-6 lg:mt-0 flex-wrap">
-            {/* Search Toggle */}
             <Button 
               variant={showSearch ? "glow" : "glass"} 
               size="sm" 
@@ -688,7 +1096,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
               Search
             </Button>
 
-            {/* Category Filter */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="glass" size="sm">
@@ -716,7 +1123,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Price Filter */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="glass" size="sm">
@@ -744,23 +1150,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Quick Filters */}
-            <Button 
-              variant={showOnlyNew ? "glow" : "glass"} 
-              size="sm"
-              onClick={() => setShowOnlyNew(!showOnlyNew)}
-            >
-              New
-            </Button>
-            <Button 
-              variant={showOnlySale ? "glow" : "glass"} 
-              size="sm"
-              onClick={() => setShowOnlySale(!showOnlySale)}
-            >
-              Sale
-            </Button>
-
-            {/* Clear Filters */}
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters}>
                 <X className="w-4 h-4" />
@@ -797,168 +1186,224 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
           </div>
         )}
 
-        {/* Results Count */}
-        <div className="mb-6 text-sm text-muted-foreground">
-          Showing {filteredProducts.length} of {products.length} products
-        </div>
+        {/* Tabs for different views */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="all" className="data-[state=active]:bg-background">
+              All Products
+            </TabsTrigger>
+            <TabsTrigger value="sections" className="data-[state=active]:bg-background">
+              By Section
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="data-[state=active]:bg-background">
+              By Category
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
-            <Card 
-              key={product.id}
-              className="group bg-gradient-card border-border overflow-hidden hover:shadow-card hover:scale-105 transition-all duration-300"
-            >
-              {/* Product Image */}
-              <div className="aspect-square bg-muted/20 relative overflow-hidden">
-                {typeof product.image === 'string' && product.image.startsWith('http') ? (
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                  />
-                ) : (
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                  />
-                )}
-                
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2">
-                  {product.isNew && (
-                    <Badge className="bg-success text-success-foreground">New</Badge>
-                  )}
-                  {product.isOnSale && (
-                    <Badge className="bg-destructive text-destructive-foreground">Sale</Badge>
-                  )}
-                </div>
+          {/* All Products Tab */}
+          <TabsContent value="all" className="mt-6">
+            <div className="mb-4 text-sm text-muted-foreground">
+              Showing {filteredProducts.length} of {products.length} products
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onTryOn={handleTryOn}
+                  onAddToCart={handleAddToCartClick}
+                  onBuyNow={handleBuyNow}
+                  onToggleFavorite={toggleFavorite}
+                  isWishlisted={isInWishlist(product.name)}
+                />
+              ))}
+            </div>
+          </TabsContent>
 
-                {/* Favorite Button */}
-                <Button
-                  variant="glass" 
-                  size="icon"
-                  className={`absolute top-3 right-3 transition-opacity ${
-                    isInWishlist(product.name) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                  }`}
-                  onClick={() => toggleFavorite(product)}
-                >
-                  <Heart 
-                    className={`w-4 h-4 transition-colors ${
-                      isInWishlist(product.name) ? 'fill-destructive text-destructive' : 'text-muted-foreground'
-                    }`} 
-                  />
-                </Button>
+          {/* By Section Tab */}
+          <TabsContent value="sections" className="mt-6 space-y-12">
+            {/* Featured Section */}
+            <div>
+              <SectionHeader 
+                icon={Sparkles} 
+                title="Featured Products" 
+                subtitle="Our top picks just for you"
+              />
+              <HorizontalProductSection
+                products={featuredProducts}
+                onTryOn={handleTryOn}
+                onAddToCart={handleAddToCartClick}
+                onBuyNow={handleBuyNow}
+                onToggleFavorite={toggleFavorite}
+                isInWishlist={isInWishlist}
+              />
+            </div>
 
-                {/* Hover Actions */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button variant="glow" size="sm" onClick={() => handleTryOn(product)}>
-                    <Eye className="w-4 h-4" />
-                    Try On
-                  </Button>
-                </div>
+            {/* Trending Section */}
+            <div>
+              <SectionHeader 
+                icon={TrendingUp} 
+                title="Trending Now" 
+                subtitle="Most popular this week"
+              />
+              <HorizontalProductSection
+                products={trendingProducts}
+                onTryOn={handleTryOn}
+                onAddToCart={handleAddToCartClick}
+                onBuyNow={handleBuyNow}
+                onToggleFavorite={toggleFavorite}
+                isInWishlist={isInWishlist}
+              />
+            </div>
+
+            {/* New Arrivals Section */}
+            <div>
+              <SectionHeader 
+                icon={Sparkles} 
+                title="New Arrivals" 
+                subtitle="Fresh styles just dropped"
+              />
+              <HorizontalProductSection
+                products={newArrivals}
+                onTryOn={handleTryOn}
+                onAddToCart={handleAddToCartClick}
+                onBuyNow={handleBuyNow}
+                onToggleFavorite={toggleFavorite}
+                isInWishlist={isInWishlist}
+              />
+            </div>
+
+            {/* On Sale Section */}
+            <div>
+              <SectionHeader 
+                icon={Tag} 
+                title="On Sale" 
+                subtitle="Great deals you don't want to miss"
+              />
+              <HorizontalProductSection
+                products={saleProducts}
+                onTryOn={handleTryOn}
+                onAddToCart={handleAddToCartClick}
+                onBuyNow={handleBuyNow}
+                onToggleFavorite={toggleFavorite}
+                isInWishlist={isInWishlist}
+              />
+            </div>
+          </TabsContent>
+
+          {/* By Category Tab */}
+          <TabsContent value="categories" className="mt-6 space-y-12">
+            {/* Clothing */}
+            <div>
+              <SectionHeader 
+                icon={Shirt} 
+                title="Clothing" 
+                subtitle={`${productsByCategory.clothing.length} items`}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {productsByCategory.clothing.slice(0, 8).map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onTryOn={handleTryOn}
+                    onAddToCart={handleAddToCartClick}
+                    onBuyNow={handleBuyNow}
+                    onToggleFavorite={toggleFavorite}
+                    isWishlisted={isInWishlist(product.name)}
+                  />
+                ))}
               </div>
+            </div>
 
-              {/* Product Info */}
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="font-semibold text-foreground text-lg group-hover:text-primary transition-colors">
-                      {product.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{product.brand}</p>
-                  </div>
-                </div>
-
-                {/* Rating */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 fill-warning text-warning" />
-                    <span className="text-sm font-medium text-foreground ml-1">
-                      {product.rating}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    ({product.reviews} reviews)
-                  </span>
-                </div>
-
-                {/* Colors */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xs text-muted-foreground">Colors:</span>
-                  <div className="flex gap-1">
-                    {product.colors.map((color, index) => (
-                      <div 
-                        key={index}
-                        className="w-4 h-4 rounded-full border border-border"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sizes */}
-                {product.sizes && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-xs text-muted-foreground">Sizes:</span>
-                    <div className="flex gap-1">
-                      {product.sizes.slice(0, 3).map((size, index) => (
-                        <Badge key={index} variant="outline" className="text-xs px-2 py-0">
-                          {size}
-                        </Badge>
-                      ))}
-                      {product.sizes.length > 3 && (
-                        <Badge variant="outline" className="text-xs px-2 py-0">
-                          +{product.sizes.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Price and Actions */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-foreground">
-                      ${product.price}
-                    </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-muted-foreground line-through">
-                        ${product.originalPrice}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="hero" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => handleBuyNow(product)}
-                    >
-                      Buy Now
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleAddToCartClick(product)}
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+            {/* Accessories */}
+            <div>
+              <SectionHeader 
+                icon={Watch} 
+                title="Accessories" 
+                subtitle={`${productsByCategory.accessories.length} items`}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {productsByCategory.accessories.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onTryOn={handleTryOn}
+                    onAddToCart={handleAddToCartClick}
+                    onBuyNow={handleBuyNow}
+                    onToggleFavorite={toggleFavorite}
+                    isWishlisted={isInWishlist(product.name)}
+                  />
+                ))}
               </div>
-            </Card>
-          ))}
-        </div>
+            </div>
 
-        {/* Load More */}
-        <div className="text-center mt-12">
-          <Button variant="glass" size="lg" onClick={handleLoadMore}>
-            Load More Products
-          </Button>
-        </div>
+            {/* Jewelry */}
+            <div>
+              <SectionHeader 
+                icon={Gem} 
+                title="Jewelry" 
+                subtitle={`${productsByCategory.jewelry.length} items`}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {productsByCategory.jewelry.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onTryOn={handleTryOn}
+                    onAddToCart={handleAddToCartClick}
+                    onBuyNow={handleBuyNow}
+                    onToggleFavorite={toggleFavorite}
+                    isWishlisted={isInWishlist(product.name)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Luxury */}
+            <div>
+              <SectionHeader 
+                icon={Crown} 
+                title="Luxury" 
+                subtitle={`${productsByCategory.luxury.length} items`}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {productsByCategory.luxury.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onTryOn={handleTryOn}
+                    onAddToCart={handleAddToCartClick}
+                    onBuyNow={handleBuyNow}
+                    onToggleFavorite={toggleFavorite}
+                    isWishlisted={isInWishlist(product.name)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Eyewear */}
+            <div>
+              <SectionHeader 
+                icon={Glasses} 
+                title="Eyewear" 
+                subtitle={`${productsByCategory.eyewear.length} items`}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {productsByCategory.eyewear.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onTryOn={handleTryOn}
+                    onAddToCart={handleAddToCartClick}
+                    onBuyNow={handleBuyNow}
+                    onToggleFavorite={toggleFavorite}
+                    isWishlisted={isInWishlist(product.name)}
+                  />
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </section>
   );
