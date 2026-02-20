@@ -806,9 +806,9 @@ const ProductCard = ({
         />
       </Button>
 
-      {/* Hover Actions */}
-      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-        <Button variant="glow" size="sm" onClick={() => onTryOn(product)}>
+      {/* Try On Button */}
+      <div className="absolute bottom-3 left-3 right-3">
+        <Button variant="glow" size="sm" className="w-full" onClick={() => onTryOn(product)}>
           <Eye className="w-4 h-4" />
           Try On
         </Button>
