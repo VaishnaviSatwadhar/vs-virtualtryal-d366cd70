@@ -808,8 +808,8 @@ const ProductCard = ({
 
       {/* Try On Button */}
       <div className="absolute bottom-3 left-3 right-3">
-        <Button variant="glow" size="sm" className="w-full" onClick={() => onTryOn(product)}>
-          <Eye className="w-4 h-4" />
+        <Button variant="glow" size="sm" className="w-full h-7 text-xs px-2 py-0" onClick={() => onTryOn(product)}>
+          <Eye className="w-3 h-3" />
           Try On
         </Button>
       </div>
