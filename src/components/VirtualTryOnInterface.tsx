@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag, RotateCcw, Settings } from "lucide-react";
+import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag, RotateCcw, Settings, Ruler } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Slider } from "./ui/slider";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
@@ -57,6 +58,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const [myProducts, setMyProducts] = useState<Product[]>([]); // User's selected products
   const [showGallery, setShowGallery] = useState(false);
   const [backgroundType, setBackgroundType] = useState<string>("original");
+  const [productSize, setProductSize] = useState<number[]>([50]);
+  const [productFit, setProductFit] = useState<number[]>([50]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -827,6 +830,53 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <div className="space-y-4 mt-4">
+              {/* Size & Fit Sliders */}
+              {selectedProduct && (
+                <div className="p-3 bg-muted/30 rounded-lg space-y-4 border border-border/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Ruler className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold">Size & Fit</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-muted-foreground">Size</label>
+                      <span className="text-xs font-medium text-primary">
+                        {productSize[0] <= 15 ? 'XS' : productSize[0] <= 30 ? 'S' : productSize[0] <= 50 ? 'M' : productSize[0] <= 70 ? 'L' : productSize[0] <= 85 ? 'XL' : 'XXL'}
+                      </span>
+                    </div>
+                    <Slider
+                      value={productSize}
+                      onValueChange={setProductSize}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>XS</span><span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-muted-foreground">Fit</label>
+                      <span className="text-xs font-medium text-primary">
+                        {productFit[0] <= 25 ? 'Slim' : productFit[0] <= 50 ? 'Regular' : productFit[0] <= 75 ? 'Relaxed' : 'Oversized'}
+                      </span>
+                    </div>
+                    <Slider
+                      value={productFit}
+                      onValueChange={setProductFit}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>Slim</span><span>Regular</span><span>Relaxed</span><span>Oversized</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Background</label>
                 <Select value={backgroundType} onValueChange={setBackgroundType}>
