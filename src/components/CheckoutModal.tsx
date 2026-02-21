@@ -120,7 +120,7 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
   if (!product) return null;
 
   const subtotal = product.price;
-  const shipping = subtotal > 100 ? 0 : 9.99;
+  const shipping = subtotal > 8000 ? 0 : 499;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
@@ -155,10 +155,10 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
                       <p className="text-sm text-muted-foreground">{product.brand}</p>
                     )}
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-lg font-bold text-foreground">${product.price}</span>
+                      <span className="text-lg font-bold text-foreground">₹{product.price}</span>
                       {product.originalPrice && (
                         <span className="text-sm text-muted-foreground line-through">
-                          ${product.originalPrice}
+                          ₹{product.originalPrice}
                         </span>
                       )}
                     </div>
@@ -169,7 +169,7 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
                 <div className="space-y-2 p-4 bg-muted/20 rounded-lg">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">${subtotal.toFixed(2)}</span>
+                    <span className="text-foreground">₹{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
@@ -177,18 +177,18 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
                       {shipping === 0 ? (
                         <Badge variant="secondary" className="bg-success/20 text-success">Free</Badge>
                       ) : (
-                        `$${shipping.toFixed(2)}`
+                        `₹${shipping.toFixed(2)}`
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax</span>
-                    <span className="text-foreground">${tax.toFixed(2)}</span>
+                    <span className="text-foreground">₹{tax.toFixed(2)}</span>
                   </div>
                   <Separator className="my-2" />
                   <div className="flex justify-between font-bold">
                     <span className="text-foreground">Total</span>
-                    <span className="text-primary text-lg">${total.toFixed(2)}</span>
+                    <span className="text-primary text-lg">₹{total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -390,7 +390,7 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
                   ) : (
                     <>
                       <Lock className="w-4 h-4 mr-2" />
-                      Pay ${total.toFixed(2)}
+                      Pay ₹{total.toFixed(2)}
                     </>
                   )}
                 </Button>
@@ -423,7 +423,7 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
               />
               <div className="text-left">
                 <h4 className="font-medium text-foreground text-sm">{product.name}</h4>
-                <p className="text-lg font-bold text-primary">${total.toFixed(2)}</p>
+                <p className="text-lg font-bold text-primary">₹{total.toFixed(2)}</p>
               </div>
             </div>
             <Button variant="hero" onClick={handleClose}>

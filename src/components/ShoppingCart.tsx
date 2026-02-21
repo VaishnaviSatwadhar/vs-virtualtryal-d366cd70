@@ -49,7 +49,7 @@ export const ShoppingCart = ({
     }
     return sum;
   }, 0);
-  const shipping = subtotal > 100 ? 0 : 9.99;
+  const shipping = subtotal > 8000 ? 0 : 499;
   const total = subtotal + shipping;
 
   const handleCheckout = () => {
@@ -160,11 +160,11 @@ export const ShoppingCart = ({
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-foreground text-sm">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            ₹{(item.price * item.quantity).toFixed(2)}
                           </p>
                           {item.originalPrice && (
                             <p className="text-xs text-muted-foreground line-through">
-                              ${(item.originalPrice * item.quantity).toFixed(2)}
+                              ₹{(item.originalPrice * item.quantity).toFixed(2)}
                             </p>
                           )}
                         </div>
@@ -188,27 +188,27 @@ export const ShoppingCart = ({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 {savings > 0 && (
                   <div className="flex justify-between text-success">
                     <span>Savings</span>
-                    <span>-${savings.toFixed(2)}</span>
+                    <span>-₹{savings.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                  <span>{shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}</span>
                 </div>
-                {subtotal < 100 && (
+                {subtotal < 8000 && (
                   <p className="text-xs text-accent">
-                    Add ${(100 - subtotal).toFixed(2)} more for free shipping!
+                    Add ₹{(8000 - subtotal).toFixed(2)} more for free shipping!
                   </p>
                 )}
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold text-foreground">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
 

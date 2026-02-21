@@ -82,28 +82,28 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   // All available products for try-on
   const products: Product[] = [
     // Clothing
-    { name: "Black T-Shirt", image: blackTshirt, brand: "StyleCorp", price: 29.99 },
-    { name: "White Hoodie", image: whiteHoodie, brand: "ComfortWear", price: 49.99 },
-    { name: "Denim Jacket", image: denimJacket, brand: "UrbanStyle", price: 79.99 },
-    { name: "Red Dress", image: redDress, brand: "ChicStyle", price: 89.99 },
-    { name: "Blue Jeans", image: blueJeans, brand: "DenimCo", price: 59.99 },
-    { name: "Green Jacket", image: greenJacket, brand: "UrbanStyle", price: 149.99 },
-    { name: "Yellow Dress", image: yellowDress, brand: "SummerVibes", price: 79.99 },
+    { name: "Black T-Shirt", image: blackTshirt, brand: "StyleCorp", price: 2499 },
+    { name: "White Hoodie", image: whiteHoodie, brand: "ComfortWear", price: 4199 },
+    { name: "Denim Jacket", image: denimJacket, brand: "UrbanStyle", price: 6599 },
+    { name: "Red Dress", image: redDress, brand: "ChicStyle", price: 7499 },
+    { name: "Blue Jeans", image: blueJeans, brand: "DenimCo", price: 4999 },
+    { name: "Green Jacket", image: greenJacket, brand: "UrbanStyle", price: 12499 },
+    { name: "Yellow Dress", image: yellowDress, brand: "SummerVibes", price: 6599 },
     
     // Accessories & Jewelry
-    { name: "Silver Watch", image: silverWatch, brand: "TechWear", price: 199.99 },
-    { name: "Gold Smartwatch", image: goldSmartwatch, brand: "DigitalLux", price: 299.99 },
-    { name: "Gold Necklace", image: goldNecklace, brand: "JewelCraft", price: 79.99 },
-    { name: "Pearl Earrings", image: pearlEarrings, brand: "EleganceJewels", price: 45.99 },
-    { name: "Diamond Ring", image: diamondRing, brand: "LuxeJewelry", price: 299.99 },
-    { name: "Silver Bracelet", image: silverBracelet, brand: "EleganceJewels", price: 49.99 },
-    { name: "Black Sunglasses", image: blackSunglasses, brand: "SunStyle", price: 59.99 },
-    { name: "Baseball Cap", image: baseballCap, brand: "UrbanCap", price: 24.99 },
-    { name: "Silk Scarf", image: silkScarf, brand: "LuxeAccessories", price: 32.99 },
-    { name: "Leather Belt", image: leatherBelt, brand: "ClassicWear", price: 39.99 },
-    { name: "Leather Handbag", image: leatherHandbag, brand: "LuxeBags", price: 149.99 },
-    { name: "Gray Cardigan", image: grayCardigan, brand: "ComfortKnits", price: 129.99 },
-    { name: "Crossbody Bag", image: crossbodyBag, brand: "UrbanStyle", price: 69.99 },
+    { name: "Silver Watch", image: silverWatch, brand: "TechWear", price: 16599 },
+    { name: "Gold Smartwatch", image: goldSmartwatch, brand: "DigitalLux", price: 24999 },
+    { name: "Gold Necklace", image: goldNecklace, brand: "JewelCraft", price: 6599 },
+    { name: "Pearl Earrings", image: pearlEarrings, brand: "EleganceJewels", price: 3799 },
+    { name: "Diamond Ring", image: diamondRing, brand: "LuxeJewelry", price: 24999 },
+    { name: "Silver Bracelet", image: silverBracelet, brand: "EleganceJewels", price: 4199 },
+    { name: "Black Sunglasses", image: blackSunglasses, brand: "SunStyle", price: 4999 },
+    { name: "Baseball Cap", image: baseballCap, brand: "UrbanCap", price: 1999 },
+    { name: "Silk Scarf", image: silkScarf, brand: "LuxeAccessories", price: 2699 },
+    { name: "Leather Belt", image: leatherBelt, brand: "ClassicWear", price: 3299 },
+    { name: "Leather Handbag", image: leatherHandbag, brand: "LuxeBags", price: 12499 },
+    { name: "Gray Cardigan", image: grayCardigan, brand: "ComfortKnits", price: 10999 },
+    { name: "Crossbody Bag", image: crossbodyBag, brand: "UrbanStyle", price: 5799 },
   ];
 
   // Auto-select product when passed from gallery
@@ -757,7 +757,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
                           className="w-full h-24 object-cover rounded-md mb-2"
                         />
                         <p className="text-xs font-medium truncate">{product.name}</p>
-                        <p className="text-xs text-muted-foreground mb-2">${product.price}</p>
+                        <p className="text-xs text-muted-foreground mb-2">₹{product.price}</p>
                         <Button
                           onClick={() => addProductToMyList(product)}
                           disabled={isAdded}
@@ -817,7 +817,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
                         className="w-full h-32 object-cover rounded-md mb-2"
                       />
                       <p className="text-sm font-medium truncate">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">${product.price}</p>
+                      <p className="text-xs text-muted-foreground">₹{product.price}</p>
                       {selectedProduct?.name === product.name && (
                         <Badge className="mt-1 w-full justify-center" variant="default">
                           Selected
