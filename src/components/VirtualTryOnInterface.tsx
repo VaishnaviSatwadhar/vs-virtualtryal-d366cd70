@@ -58,7 +58,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const [myProducts, setMyProducts] = useState<Product[]>([]); // User's selected products
   const [showGallery, setShowGallery] = useState(false);
   const [backgroundType, setBackgroundType] = useState<string>("original");
-  const [productSize, setProductSize] = useState<number[]>([50]);
+  
   const [productFit, setProductFit] = useState<number[]>([50]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
@@ -830,31 +830,12 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <div className="space-y-4 mt-4">
-              {/* Size & Fit Sliders */}
+              {/* Fit Slider */}
               {selectedProduct && (
                 <div className="p-3 bg-muted/30 rounded-lg space-y-4 border border-border/50">
                   <div className="flex items-center gap-2 mb-1">
                     <Ruler className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold">Size & Fit</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-muted-foreground">Size</label>
-                      <span className="text-xs font-medium text-primary">
-                        {productSize[0] <= 15 ? 'XS' : productSize[0] <= 30 ? 'S' : productSize[0] <= 50 ? 'M' : productSize[0] <= 70 ? 'L' : productSize[0] <= 85 ? 'XL' : 'XXL'}
-                      </span>
-                    </div>
-                    <Slider
-                      value={productSize}
-                      onValueChange={setProductSize}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground">
-                      <span>XS</span><span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span>
-                    </div>
+                    <span className="text-sm font-semibold">Fit</span>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
