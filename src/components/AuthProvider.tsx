@@ -17,12 +17,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Clear any stale/broken session tokens BEFORE Supabase tries to use them
+    const storageKey = `sb-dkwhjdhnbwjszvciugzn-auth-token`;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // If token is expired or missing required fields, remove it
+        if (!parsed?.access_token || !parsed?.refresh_token || 
+            (parsed.expires_at && parsed.expires_at * 1000 < Date.now())) {
+          localStorage.removeItem(storageKey);
+        }
+      }
+    } catch {
+      localStorage.removeItem(storageKey);
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          // Token refresh failed, clear stale data
+          localStorage.removeItem(storageKey);
+        }
 
         // Sync Google profile data to profiles table
         if (session?.user && event === 'SIGNED_IN') {
@@ -36,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        // Clear stale session data
+        localStorage.removeItem(storageKey);
         setSession(null);
         setUser(null);
       } else {
