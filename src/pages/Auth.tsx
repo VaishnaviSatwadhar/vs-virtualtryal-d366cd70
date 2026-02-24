@@ -35,18 +35,25 @@ const Auth = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Handle password reset redirect
+  // Clear stale session on auth page load & handle recovery
   useEffect(() => {
-    const handleRecovery = async () => {
-      // Check for recovery event from Supabase
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          setView('reset-password');
-        }
-      });
-      return () => subscription.unsubscribe();
+    const init = async () => {
+      // Check current session - if refresh fails, clear it so it doesn't block new sign-ins
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        // Clear any stale tokens from localStorage to stop retry loops
+        const storageKey = `sb-dkwhjdhnbwjszvciugzn-auth-token`;
+        localStorage.removeItem(storageKey);
+      }
     };
-    handleRecovery();
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setView('reset-password');
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -82,6 +89,9 @@ const Auth = () => {
         }
 
         if (error) {
+          if (error.message.includes("Failed to fetch") || error.name === 'AuthRetryableFetchError') {
+            throw new Error("Network error. Please check your connection and try again.");
+          }
           if (error.message.includes("Invalid login credentials")) {
             throw new Error("Invalid email or password. Please check your credentials.");
           }
