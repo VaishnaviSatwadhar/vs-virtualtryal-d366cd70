@@ -63,6 +63,28 @@ const Auth = () => {
     }
   }, [user, navigate, view]);
 
+  // Helper: retry a supabase auth call up to 3 times on network errors
+  const withRetry = async <T,>(fn: () => Promise<T>, retries = 3): Promise<T> => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        const isNetwork = err.message?.includes("Failed to fetch") || 
+                          err.message?.includes("NetworkError") ||
+                          err.name === 'AuthRetryableFetchError';
+        if (isNetwork && attempt < retries - 1) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+        if (isNetwork) {
+          throw new Error("Network error. Please check your internet connection and try again.");
+        }
+        throw err;
+      }
+    }
+    throw new Error("Network error. Please try again.");
+  };
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -80,10 +102,12 @@ const Auth = () => {
       }
 
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: validation.data.email,
-          password: validation.data.password,
-        });
+        const { error } = await withRetry(() =>
+          supabase.auth.signInWithPassword({
+            email: validation.data.email,
+            password: validation.data.password,
+          })
+        );
 
         if (!error && rememberMe) {
           localStorage.setItem('rememberMe', 'true');
@@ -105,45 +129,30 @@ const Auth = () => {
         toast({ title: "Welcome back!", description: "You've been logged in successfully." });
         navigate('/');
       } else {
-        // Sign up with retry on network failure
-        let signUpData: any = null;
-        let signUpError: any = null;
-
-        for (let attempt = 0; attempt < 2; attempt++) {
-          try {
-            const { data, error } = await supabase.auth.signUp({
-              email: validation.data.email,
-              password: validation.data.password,
-              options: {
-                emailRedirectTo: `${window.location.origin}/`,
-                data: {
-                  username: validation.data.username || validation.data.email.split('@')[0],
-                },
+        const { data, error } = await withRetry(() =>
+          supabase.auth.signUp({
+            email: validation.data.email,
+            password: validation.data.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/`,
+              data: {
+                username: validation.data.username || validation.data.email.split('@')[0],
               },
-            });
-            signUpData = data;
-            signUpError = error;
-            break;
-          } catch (fetchErr: any) {
-            if (attempt === 0 && (fetchErr.message?.includes("Failed to fetch") || fetchErr.message?.includes("NetworkError"))) {
-              await new Promise(r => setTimeout(r, 1500));
-              continue;
-            }
-            throw new Error("Network error. Please check your connection and try again.");
-          }
-        }
+            },
+          })
+        );
 
-        if (signUpError) {
-          if (signUpError.message?.includes("Failed to fetch") || signUpError.name === 'AuthRetryableFetchError') {
+        if (error) {
+          if (error.message?.includes("Failed to fetch") || error.name === 'AuthRetryableFetchError') {
             throw new Error("Network error. Please check your connection and try again.");
           }
-          if (signUpError.message?.includes("already registered")) {
+          if (error.message?.includes("already registered")) {
             throw new Error("This email is already registered. Try signing in instead.");
           }
-          throw new Error(signUpError.message || "Sign up failed. Please try again.");
+          throw new Error(error.message || "Sign up failed. Please try again.");
         }
 
-        if (signUpData?.user?.identities?.length === 0) {
+        if (data?.user?.identities?.length === 0) {
           throw new Error("This email is already registered. Try signing in instead.");
         }
 
