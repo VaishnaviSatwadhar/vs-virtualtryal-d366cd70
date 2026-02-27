@@ -105,27 +105,45 @@ const Auth = () => {
         toast({ title: "Welcome back!", description: "You've been logged in successfully." });
         navigate('/');
       } else {
-        // Sign up
-        const { data, error } = await supabase.auth.signUp({
-          email: validation.data.email,
-          password: validation.data.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              username: validation.data.username || validation.data.email.split('@')[0],
-            },
-          },
-        });
+        // Sign up with retry on network failure
+        let signUpData: any = null;
+        let signUpError: any = null;
 
-        if (error) {
-          if (error.message.includes("already registered")) {
-            throw new Error("This email is already registered. Try signing in instead.");
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const { data, error } = await supabase.auth.signUp({
+              email: validation.data.email,
+              password: validation.data.password,
+              options: {
+                emailRedirectTo: `${window.location.origin}/`,
+                data: {
+                  username: validation.data.username || validation.data.email.split('@')[0],
+                },
+              },
+            });
+            signUpData = data;
+            signUpError = error;
+            break;
+          } catch (fetchErr: any) {
+            if (attempt === 0 && (fetchErr.message?.includes("Failed to fetch") || fetchErr.message?.includes("NetworkError"))) {
+              await new Promise(r => setTimeout(r, 1500));
+              continue;
+            }
+            throw new Error("Network error. Please check your connection and try again.");
           }
-          throw new Error("Sign up failed. Please try again.");
         }
 
-        // Auto-confirm is enabled, so user is logged in immediately
-        if (data?.user?.identities?.length === 0) {
+        if (signUpError) {
+          if (signUpError.message?.includes("Failed to fetch") || signUpError.name === 'AuthRetryableFetchError') {
+            throw new Error("Network error. Please check your connection and try again.");
+          }
+          if (signUpError.message?.includes("already registered")) {
+            throw new Error("This email is already registered. Try signing in instead.");
+          }
+          throw new Error(signUpError.message || "Sign up failed. Please try again.");
+        }
+
+        if (signUpData?.user?.identities?.length === 0) {
           throw new Error("This email is already registered. Try signing in instead.");
         }
 
