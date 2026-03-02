@@ -236,10 +236,12 @@ const Auth = () => {
       const validation = z.string().email({ message: "Invalid email address" }).safeParse(email.trim());
       if (!validation.success) throw new Error(validation.error.errors[0].message);
 
-      const { error } = await supabase.auth.signInWithOtp({
-        email: validation.data,
-        options: { emailRedirectTo: `${window.location.origin}/` },
-      });
+      const { error } = await withRetry(() =>
+        supabase.auth.signInWithOtp({
+          email: validation.data,
+          options: { emailRedirectTo: `${window.location.origin}/` },
+        })
+      );
 
       if (error) throw error;
 
