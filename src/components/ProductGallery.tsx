@@ -568,7 +568,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 234,
     category: 'clothing',
-    image: grayCardigan,
+    image: cashmereSweater,
     colors: ["#D4C4B0", "#000000", "#FFFFFF"],
     sizes: ["S", "M", "L", "XL"],
     isNew: true,
