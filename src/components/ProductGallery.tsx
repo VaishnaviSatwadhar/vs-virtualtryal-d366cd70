@@ -416,7 +416,7 @@ const products: Product[] = [
     rating: 4.5,
     reviews: 178,
     category: 'clothing',
-    image: grayCardigan,
+    image: premiumCardigan,
     colors: ["#6B7280", "#000000", "#FFFFFF"],
     sizes: ["S", "M", "L", "XL"],
   },
