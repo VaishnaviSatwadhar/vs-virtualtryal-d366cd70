@@ -542,7 +542,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 123,
     category: 'luxury',
-    image: silkScarf,
+    image: silkTie,
     colors: ["#1E3A8A", "#DC2626", "#000000"],
     isNew: true,
   },
