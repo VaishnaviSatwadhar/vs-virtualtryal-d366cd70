@@ -63,6 +63,29 @@ import crossbodyBag from "@/assets/products/crossbody-bag.jpg";
 import whiteSneakers from "@/assets/products/white-sneakers.jpg";
 import blackBoots from "@/assets/products/black-boots.jpg";
 import brownAnkleBoots from "@/assets/products/brown-ankle-boots.jpg";
+import vintageDenimJacket from "@/assets/products/vintage-denim-jacket.jpg";
+import silverWatchCollection from "@/assets/products/silver-watch-collection.jpg";
+import premiumCardigan from "@/assets/products/premium-cardigan.jpg";
+import aviatorSunglasses from "@/assets/products/aviator-sunglasses.jpg";
+import diamondBracelet from "@/assets/products/diamond-bracelet.jpg";
+import sportSunglasses from "@/assets/products/sport-sunglasses.jpg";
+import platinumBand from "@/assets/products/platinum-band.jpg";
+import readingGlasses from "@/assets/products/reading-glasses.jpg";
+import silkTie from "@/assets/products/silk-tie.jpg";
+import emeraldEarrings from "@/assets/products/emerald-earrings.jpg";
+import cashmereSweater from "@/assets/products/cashmere-sweater.jpg";
+import titaniumWatch from "@/assets/products/titanium-watch.jpg";
+import toteBag from "@/assets/products/tote-bag.jpg";
+import sapphirePendant from "@/assets/products/sapphire-pendant.jpg";
+import catEyeGlasses from "@/assets/products/cat-eye-glasses.jpg";
+import linenShirt from "@/assets/products/linen-shirt.jpg";
+import canvasBackpack from "@/assets/products/canvas-backpack.jpg";
+import crystalNecklace from "@/assets/products/crystal-necklace.jpg";
+import leatherLoafers from "@/assets/products/leather-loafers.jpg";
+import fitnessBand from "@/assets/products/fitness-band.jpg";
+import woolCoat from "@/assets/products/wool-coat.jpg";
+import polarizedShades from "@/assets/products/polarized-shades.jpg";
+import rubyEarrings from "@/assets/products/ruby-earrings.jpg";
 
 interface Product {
   id: string;
@@ -212,7 +235,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 156,
     category: 'clothing',
-    image: denimJacket,
+    image: vintageDenimJacket,
     colors: ["#4169E1", "#1E3A8A", "#000000"],
     sizes: ["S", "M", "L", "XL"],
     isTrending: true,
@@ -367,7 +390,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 145,
     category: 'luxury',
-    image: silverWatch,
+    image: silverWatchCollection,
     colors: ["#C0C0C0", "#FFD700"],
     isOnSale: true,
   },
@@ -393,7 +416,7 @@ const products: Product[] = [
     rating: 4.5,
     reviews: 178,
     category: 'clothing',
-    image: grayCardigan,
+    image: premiumCardigan,
     colors: ["#6B7280", "#000000", "#FFFFFF"],
     sizes: ["S", "M", "L", "XL"],
   },
@@ -446,7 +469,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 276,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: aviatorSunglasses,
     colors: ["#FFD700", "#C0C0C0", "#000000"],
     isNew: true,
     isFeatured: true,
@@ -459,7 +482,7 @@ const products: Product[] = [
     rating: 5.0,
     reviews: 89,
     category: 'luxury',
-    image: silverBracelet,
+    image: diamondBracelet,
     colors: ["#C0C0C0", "#FFD700"],
     isFeatured: true,
   },
@@ -484,7 +507,7 @@ const products: Product[] = [
     rating: 4.4,
     reviews: 234,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: sportSunglasses,
     colors: ["#000000", "#DC2626", "#1E3A8A"],
     isOnSale: true,
   },
@@ -496,7 +519,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 56,
     category: 'jewelry',
-    image: diamondRing,
+    image: platinumBand,
     colors: ["#E5E7EB", "#FFD700"],
     isFeatured: true,
   },
@@ -508,7 +531,7 @@ const products: Product[] = [
     rating: 4.3,
     reviews: 189,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: readingGlasses,
     colors: ["#8B4513", "#000000", "#FFD700"],
   },
   {
@@ -519,7 +542,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 123,
     category: 'luxury',
-    image: silkScarf,
+    image: silkTie,
     colors: ["#1E3A8A", "#DC2626", "#000000"],
     isNew: true,
   },
@@ -531,7 +554,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 78,
     category: 'jewelry',
-    image: pearlEarrings,
+    image: emeraldEarrings,
     colors: ["#065F46", "#FFD700"],
     isNew: true,
     isTrending: true,
@@ -545,7 +568,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 234,
     category: 'clothing',
-    image: grayCardigan,
+    image: cashmereSweater,
     colors: ["#D4C4B0", "#000000", "#FFFFFF"],
     sizes: ["S", "M", "L", "XL"],
     isNew: true,
@@ -559,7 +582,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 189,
     category: 'accessories',
-    image: goldSmartwatch,
+    image: titaniumWatch,
     colors: ["#374151", "#000000"],
     isNew: true,
     isTrending: true,
@@ -573,7 +596,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 156,
     category: 'luxury',
-    image: leatherHandbag,
+    image: toteBag,
     colors: ["#000000", "#8B4513", "#DC2626"],
     isOnSale: true,
     isFeatured: true,
@@ -586,7 +609,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 67,
     category: 'jewelry',
-    image: goldNecklace,
+    image: sapphirePendant,
     colors: ["#1E40AF", "#C0C0C0"],
     isNew: true,
     isFeatured: true,
@@ -599,7 +622,7 @@ const products: Product[] = [
     rating: 4.6,
     reviews: 145,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: catEyeGlasses,
     colors: ["#DC2626", "#000000", "#8B4513"],
     isTrending: true,
   },
@@ -612,7 +635,7 @@ const products: Product[] = [
     rating: 4.5,
     reviews: 267,
     category: 'clothing',
-    image: whiteHoodie,
+    image: linenShirt,
     colors: ["#FFFFFF", "#87CEEB", "#F5DEB3"],
     sizes: ["S", "M", "L", "XL"],
     isOnSale: true,
@@ -625,7 +648,7 @@ const products: Product[] = [
     rating: 4.4,
     reviews: 312,
     category: 'accessories',
-    image: crossbodyBag,
+    image: canvasBackpack,
     colors: ["#374151", "#8B4513", "#000000"],
     isTrending: true,
   },
@@ -637,7 +660,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 98,
     category: 'jewelry',
-    image: goldNecklace,
+    image: crystalNecklace,
     colors: ["#E5E7EB", "#FFD700"],
     isNew: true,
   },
@@ -649,7 +672,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 156,
     category: 'clothing',
-    image: blackBoots,
+    image: leatherLoafers,
     colors: ["#8B4513", "#000000"],
     sizes: ["7", "8", "9", "10", "11", "12"],
     isFeatured: true,
@@ -663,7 +686,7 @@ const products: Product[] = [
     rating: 4.6,
     reviews: 423,
     category: 'accessories',
-    image: roseGoldSmartwatch,
+    image: fitnessBand,
     colors: ["#000000", "#DC2626", "#1E3A8A"],
     isOnSale: true,
     isTrending: true,
@@ -676,7 +699,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 187,
     category: 'clothing',
-    image: greenJacket,
+    image: woolCoat,
     colors: ["#374151", "#000000", "#8B4513"],
     sizes: ["S", "M", "L", "XL"],
     isNew: true,
@@ -690,7 +713,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 234,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: polarizedShades,
     colors: ["#000000", "#1E3A8A"],
     isNew: true,
   },
@@ -703,7 +726,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 89,
     category: 'jewelry',
-    image: pearlEarrings,
+    image: rubyEarrings,
     colors: ["#DC2626", "#FFD700"],
     isOnSale: true,
     isFeatured: true,

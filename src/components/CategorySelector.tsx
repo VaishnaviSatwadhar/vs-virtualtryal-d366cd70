@@ -18,6 +18,10 @@ import roseGoldSmartwatch from "@/assets/products/rose-gold-smartwatch.jpg";
 import diamondRing from "@/assets/products/diamond-ring.jpg";
 import goldNecklace from "@/assets/products/gold-necklace.jpg";
 import pearlEarrings from "@/assets/products/pearl-earrings.jpg";
+import aviatorSunglasses from "@/assets/products/aviator-sunglasses.jpg";
+import readingGlasses from "@/assets/products/reading-glasses.jpg";
+import cosmetsicsSet from "@/assets/products/cosmetics-set.jpg";
+import silverBracelet from "@/assets/products/silver-bracelet.jpg";
 
 const categories = [
   {
@@ -55,8 +59,8 @@ const categories = [
     bgColor: "bg-success/10",
     sampleProducts: [
       { name: "Silk Scarf", image: silkScarf },
-      { name: "Pearl Earrings", image: pearlEarrings },
-      { name: "Gold Necklace", image: goldNecklace },
+      { name: "Cosmetics Set", image: cosmetsicsSet },
+      { name: "Silver Bracelet", image: silverBracelet },
     ],
   },
   {
@@ -68,8 +72,8 @@ const categories = [
     bgColor: "bg-warning/10",
     sampleProducts: [
       { name: "Black Sunglasses", image: blackSunglasses },
-      { name: "Black Sunglasses", image: blackSunglasses },
-      { name: "Black Sunglasses", image: blackSunglasses },
+      { name: "Aviator Sunglasses", image: aviatorSunglasses },
+      { name: "Reading Glasses", image: readingGlasses },
     ],
   },
   {
