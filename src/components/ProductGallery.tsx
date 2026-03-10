@@ -622,7 +622,7 @@ const products: Product[] = [
     rating: 4.6,
     reviews: 145,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: catEyeGlasses,
     colors: ["#DC2626", "#000000", "#8B4513"],
     isTrending: true,
   },
