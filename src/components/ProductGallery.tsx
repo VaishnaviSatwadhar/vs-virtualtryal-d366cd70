@@ -390,7 +390,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 145,
     category: 'luxury',
-    image: silverWatch,
+    image: silverWatchCollection,
     colors: ["#C0C0C0", "#FFD700"],
     isOnSale: true,
   },
