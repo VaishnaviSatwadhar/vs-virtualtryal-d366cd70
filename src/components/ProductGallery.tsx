@@ -726,7 +726,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 89,
     category: 'jewelry',
-    image: pearlEarrings,
+    image: rubyEarrings,
     colors: ["#DC2626", "#FFD700"],
     isOnSale: true,
     isFeatured: true,
