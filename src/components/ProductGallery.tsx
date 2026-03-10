@@ -672,7 +672,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 156,
     category: 'clothing',
-    image: blackBoots,
+    image: leatherLoafers,
     colors: ["#8B4513", "#000000"],
     sizes: ["7", "8", "9", "10", "11", "12"],
     isFeatured: true,
