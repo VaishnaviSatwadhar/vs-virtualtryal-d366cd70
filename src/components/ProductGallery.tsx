@@ -235,7 +235,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 156,
     category: 'clothing',
-    image: denimJacket,
+    image: vintageDenimJacket,
     colors: ["#4169E1", "#1E3A8A", "#000000"],
     sizes: ["S", "M", "L", "XL"],
     isTrending: true,
