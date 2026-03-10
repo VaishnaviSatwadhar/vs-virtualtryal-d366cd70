@@ -699,7 +699,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 187,
     category: 'clothing',
-    image: greenJacket,
+    image: woolCoat,
     colors: ["#374151", "#000000", "#8B4513"],
     sizes: ["S", "M", "L", "XL"],
     isNew: true,
