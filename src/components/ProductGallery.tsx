@@ -582,7 +582,7 @@ const products: Product[] = [
     rating: 4.8,
     reviews: 189,
     category: 'accessories',
-    image: goldSmartwatch,
+    image: titaniumWatch,
     colors: ["#374151", "#000000"],
     isNew: true,
     isTrending: true,
