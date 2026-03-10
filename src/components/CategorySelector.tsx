@@ -72,8 +72,8 @@ const categories = [
     bgColor: "bg-warning/10",
     sampleProducts: [
       { name: "Black Sunglasses", image: blackSunglasses },
-      { name: "Black Sunglasses", image: blackSunglasses },
-      { name: "Black Sunglasses", image: blackSunglasses },
+      { name: "Aviator Sunglasses", image: aviatorSunglasses },
+      { name: "Reading Glasses", image: readingGlasses },
     ],
   },
   {
