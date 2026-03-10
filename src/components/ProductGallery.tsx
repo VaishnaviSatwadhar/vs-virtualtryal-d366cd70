@@ -713,7 +713,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 234,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: polarizedShades,
     colors: ["#000000", "#1E3A8A"],
     isNew: true,
   },
