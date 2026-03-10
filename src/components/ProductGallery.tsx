@@ -686,7 +686,7 @@ const products: Product[] = [
     rating: 4.6,
     reviews: 423,
     category: 'accessories',
-    image: roseGoldSmartwatch,
+    image: fitnessBand,
     colors: ["#000000", "#DC2626", "#1E3A8A"],
     isOnSale: true,
     isTrending: true,
