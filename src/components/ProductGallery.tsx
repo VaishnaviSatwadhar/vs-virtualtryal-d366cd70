@@ -531,7 +531,7 @@ const products: Product[] = [
     rating: 4.3,
     reviews: 189,
     category: 'eyewear',
-    image: blackSunglasses,
+    image: readingGlasses,
     colors: ["#8B4513", "#000000", "#FFD700"],
   },
   {
