@@ -482,7 +482,7 @@ const products: Product[] = [
     rating: 5.0,
     reviews: 89,
     category: 'luxury',
-    image: silverBracelet,
+    image: diamondBracelet,
     colors: ["#C0C0C0", "#FFD700"],
     isFeatured: true,
   },
