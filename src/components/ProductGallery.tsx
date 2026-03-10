@@ -596,7 +596,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 156,
     category: 'luxury',
-    image: leatherHandbag,
+    image: toteBag,
     colors: ["#000000", "#8B4513", "#DC2626"],
     isOnSale: true,
     isFeatured: true,
