@@ -660,7 +660,7 @@ const products: Product[] = [
     rating: 4.7,
     reviews: 98,
     category: 'jewelry',
-    image: goldNecklace,
+    image: crystalNecklace,
     colors: ["#E5E7EB", "#FFD700"],
     isNew: true,
   },
