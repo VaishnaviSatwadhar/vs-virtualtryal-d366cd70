@@ -635,7 +635,7 @@ const products: Product[] = [
     rating: 4.5,
     reviews: 267,
     category: 'clothing',
-    image: whiteHoodie,
+    image: linenShirt,
     colors: ["#FFFFFF", "#87CEEB", "#F5DEB3"],
     sizes: ["S", "M", "L", "XL"],
     isOnSale: true,
