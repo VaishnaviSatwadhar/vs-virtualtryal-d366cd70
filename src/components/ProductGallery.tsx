@@ -609,7 +609,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 67,
     category: 'jewelry',
-    image: goldNecklace,
+    image: sapphirePendant,
     colors: ["#1E40AF", "#C0C0C0"],
     isNew: true,
     isFeatured: true,
