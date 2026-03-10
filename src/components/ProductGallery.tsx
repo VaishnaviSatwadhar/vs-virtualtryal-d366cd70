@@ -648,7 +648,7 @@ const products: Product[] = [
     rating: 4.4,
     reviews: 312,
     category: 'accessories',
-    image: crossbodyBag,
+    image: canvasBackpack,
     colors: ["#374151", "#8B4513", "#000000"],
     isTrending: true,
   },
