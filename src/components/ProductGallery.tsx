@@ -519,7 +519,7 @@ const products: Product[] = [
     rating: 4.9,
     reviews: 56,
     category: 'jewelry',
-    image: diamondRing,
+    image: platinumBand,
     colors: ["#E5E7EB", "#FFD700"],
     isFeatured: true,
   },
