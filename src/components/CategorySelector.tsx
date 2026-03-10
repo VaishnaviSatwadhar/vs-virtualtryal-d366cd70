@@ -59,8 +59,8 @@ const categories = [
     bgColor: "bg-success/10",
     sampleProducts: [
       { name: "Silk Scarf", image: silkScarf },
-      { name: "Pearl Earrings", image: pearlEarrings },
-      { name: "Gold Necklace", image: goldNecklace },
+      { name: "Cosmetics Set", image: cosmetsicsSet },
+      { name: "Silver Bracelet", image: silverBracelet },
     ],
   },
   {
