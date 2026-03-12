@@ -77,7 +77,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // All available products for try-on
   const products: Product[] = [
