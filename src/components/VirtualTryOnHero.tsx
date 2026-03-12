@@ -46,7 +46,7 @@ export const VirtualTryOnHero = ({ onStartTrial }: VirtualTryOnHeroProps) => {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-card/20 backdrop-blur-md border border-accent/30 rounded-full px-4 py-2 mb-8">
           <Sparkles className="w-4 h-4 text-accent" />
-          <span className="text-sm font-medium text-foreground">AI-Powered Virtual Trials</span>
+          <span className="text-sm font-medium text-foreground">AI-Based Virtual Try-On</span>
           <Zap className="w-4 h-4 text-warning animate-pulse" />
         </div>
 
