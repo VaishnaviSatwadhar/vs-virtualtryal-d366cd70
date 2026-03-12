@@ -1118,8 +1118,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
         </div>
 
         <div className="flex justify-center gap-3 mb-8 flex-wrap">
-          
-          <div className="flex gap-3 mt-6 lg:mt-0 flex-wrap">
             <Button 
               variant={showSearch ? "glow" : "glass"} 
               size="sm" 
@@ -1189,7 +1187,6 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
                 Clear
               </Button>
             )}
-          </div>
         </div>
 
         {/* Search Bar */}
