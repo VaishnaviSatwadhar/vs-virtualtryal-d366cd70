@@ -1100,18 +1100,24 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
   };
 
   return (
-    <section id="product-gallery" className="py-16 px-6">
+    <section id="product-gallery" className="py-16 px-6 bg-gradient-hero">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-          <div>
-            <h2 className="text-4xl font-bold text-foreground mb-4">
-              Product Gallery
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Explore our curated collection and try them on virtually with our AI technology.
-            </p>
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-card/20 backdrop-blur-md border border-primary/30 rounded-full px-4 py-2 mb-6">
+            <ShoppingCart className="w-4 h-4 text-primary animate-pulse" />
+            <span className="text-sm font-medium text-foreground">Curated Collection</span>
           </div>
+          
+          <h2 className="text-4xl font-bold text-foreground mb-4">
+            Product Gallery
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Explore our curated collection and try them on virtually with our AI technology.
+          </p>
+        </div>
+
+        <div className="flex justify-center gap-3 mb-8 flex-wrap">
           
           <div className="flex gap-3 mt-6 lg:mt-0 flex-wrap">
             <Button 
