@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { Camera, Sparkles, Zap, ArrowRight } from "lucide-react";
+import { Camera, Sparkles, Zap, ArrowRight, Upload, ShoppingBag, Download } from "lucide-react";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-virtual-tryon.jpg";
+import { useState } from "react";
 
 interface VirtualTryOnHeroProps {
   onStartTrial?: () => void;
 }
 
 export const VirtualTryOnHero = ({ onStartTrial }: VirtualTryOnHeroProps) => {
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+
   const handleStartTrial = () => {
     toast.success("Starting virtual trial experience...");
     onStartTrial?.();
@@ -18,11 +21,11 @@ export const VirtualTryOnHero = ({ onStartTrial }: VirtualTryOnHeroProps) => {
   };
 
   const handleSeeHowItWorks = () => {
-    toast.info("Learn how our AI technology works!");
-    // Could open a modal or navigate to tutorial
+    setShowHowItWorks(!showHowItWorks);
   };
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
+    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-hero">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 opacity-30">
         <img 
@@ -86,9 +89,40 @@ export const VirtualTryOnHero = ({ onStartTrial }: VirtualTryOnHeroProps) => {
             onClick={handleSeeHowItWorks}
           >
             <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            See How It Works
+            {showHowItWorks ? "Hide Steps" : "See How It Works"}
           </Button>
         </div>
+
+        {/* How It Works Steps */}
+        {showHowItWorks && (
+          <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="text-center p-6 rounded-xl bg-card/80 backdrop-blur-sm border shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                  <Upload className="w-6 h-6" />
+                </div>
+                <h4 className="font-semibold mb-2">1. Upload Your Photo</h4>
+                <p className="text-sm text-muted-foreground">Take a photo or upload an image showing your upper body for best results</p>
+              </div>
+              
+              <div className="text-center p-6 rounded-xl bg-card/80 backdrop-blur-sm border shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                  <ShoppingBag className="w-6 h-6" />
+                </div>
+                <h4 className="font-semibold mb-2">2. Select Product</h4>
+                <p className="text-sm text-muted-foreground">Choose any clothing, accessory, or jewelry from our gallery to try on</p>
+              </div>
+              
+              <div className="text-center p-6 rounded-xl bg-card/80 backdrop-blur-sm border shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                  <Download className="w-6 h-6" />
+                </div>
+                <h4 className="font-semibold mb-2">3. Generate & Download</h4>
+                <p className="text-sm text-muted-foreground">Our AI creates a realistic try-on image that you can save and share</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-8 mt-16 max-w-2xl mx-auto">
