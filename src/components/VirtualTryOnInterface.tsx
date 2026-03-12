@@ -465,36 +465,6 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   return (
 <section id="virtual-trial-interface" className="py-20 bg-gradient-to-b from-background to-accent/5">
       <div className="container mx-auto px-4">
-        {/* How to Generate Image Steps */}
-        <div className="max-w-4xl mx-auto mb-16">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              How to Generate Image
-            </h2>
-            <p className="text-muted-foreground">Follow these simple steps to create your virtual try-on</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-6 rounded-xl bg-card border shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
-              <h4 className="font-semibold mb-2">Upload Your Photo</h4>
-              <p className="text-sm text-muted-foreground">Take a photo or upload an image showing your upper body or full body for best results</p>
-            </div>
-            
-            <div className="text-center p-6 rounded-xl bg-card border shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-              <h4 className="font-semibold mb-2">Select Product</h4>
-              <p className="text-sm text-muted-foreground">Choose any clothing item, accessory, or jewelry from our gallery to try on virtually</p>
-            </div>
-            
-            <div className="text-center p-6 rounded-xl bg-card border shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
-              <h4 className="font-semibold mb-2">Generate & Download</h4>
-              <p className="text-sm text-muted-foreground">Click "Generate Try-On" and our AI will create a realistic image you can download</p>
-            </div>
-          </div>
-        </div>
-
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             AI Virtual Try-On Studio
