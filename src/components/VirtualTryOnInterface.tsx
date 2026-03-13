@@ -310,6 +310,17 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     }, 1000);
   };
 
+  // Attach stream to video when camera view mounts
+  useEffect(() => {
+    if (showCamera && streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current?.play().catch(() => {});
+        setIsCameraReady(true);
+      };
+    }
+  }, [showCamera]);
+
   // Cleanup countdown on unmount
   useEffect(() => {
     return () => {
