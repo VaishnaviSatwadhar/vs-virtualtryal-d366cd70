@@ -148,12 +148,30 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     toast.success(`Product removed from your selection`);
   };
 
+  const attachStreamToVideo = useCallback((stream: MediaStream, label?: string) => {
+    const tryAttach = () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(() => {});
+          setIsCameraReady(true);
+          toast.success(label ? `Camera ready! (${label})` : "Camera ready!");
+        };
+      }
+    };
+    // Try immediately, and also after a short delay for when the element just mounted
+    tryAttach();
+    requestAnimationFrame(() => requestAnimationFrame(tryAttach));
+  }, []);
+
   const startCamera = useCallback(async (mode?: FacingMode) => {
     // Stop any existing stream first
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
     
+    setIsCameraReady(false);
     const currentFacingMode = mode || facingMode;
     const resolution = RESOLUTION_CONFIG[cameraResolution];
     
@@ -166,18 +184,9 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         } 
       });
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = () => {
-          setIsCameraReady(true);
-          toast.success(`Camera ready! (${resolution.label})`);
-        };
-      }
-      
       streamRef.current = stream;
       setShowCamera(true);
+      attachStreamToVideo(stream, resolution.label);
     } catch (error: any) {
       console.error('Camera error:', error);
       if (error.name === 'NotAllowedError') {
@@ -185,25 +194,22 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       } else if (error.name === 'NotFoundError') {
         toast.error("No camera found on your device.");
       } else if (error.name === 'OverconstrainedError') {
-        // Fallback to lower resolution if requested is not supported
         toast.info("Requested resolution not available, using default.");
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: currentFacingMode } 
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = fallbackStream;
-          videoRef.current.onloadedmetadata = () => {
-            setIsCameraReady(true);
-            toast.success("Camera ready!");
-          };
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: currentFacingMode } 
+          });
+          streamRef.current = fallbackStream;
+          setShowCamera(true);
+          attachStreamToVideo(fallbackStream);
+        } catch {
+          toast.error("Failed to access camera. Please try again.");
         }
-        streamRef.current = fallbackStream;
-        setShowCamera(true);
       } else {
         toast.error("Failed to access camera. Please try again.");
       }
     }
-  }, [facingMode, cameraResolution]);
+  }, [facingMode, cameraResolution, attachStreamToVideo]);
 
   const flipCamera = async () => {
     const newMode = facingMode === "user" ? "environment" : "user";
