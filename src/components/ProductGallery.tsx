@@ -1169,7 +1169,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     }
 
     return result;
-  }, [selectedCategory, selectedCategories, searchQuery, selectedPriceRanges, showOnlyNew, showOnlySale]);
+  }, [selectedCategory, selectedCategories, searchQuery, priceRange, showOnlyNew, showOnlySale]);
 
   // Categorized products
   const featuredProducts = useMemo(() => products.filter(p => p.isFeatured), []);
