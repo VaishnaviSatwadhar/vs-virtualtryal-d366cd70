@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
@@ -904,13 +906,8 @@ const categoryLabels = {
   jewelry: "Jewelry",
 };
 
-const priceRanges = [
-  { label: "Under ₹4,000", min: 0, max: 4000 },
-  { label: "₹4,000 - ₹8,000", min: 4000, max: 8000 },
-  { label: "₹8,000 - ₹16,000", min: 8000, max: 16000 },
-  { label: "₹16,000 - ₹40,000", min: 16000, max: 40000 },
-  { label: "Over ₹40,000", min: 40000, max: Infinity },
-];
+const MIN_PRICE = 0;
+const MAX_PRICE = 50000;
 
 interface ProductGalleryProps {
   selectedCategory?: string;
@@ -1130,7 +1127,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([MIN_PRICE, MAX_PRICE]);
   const [showOnlyNew, setShowOnlyNew] = useState(false);
   const [showOnlySale, setShowOnlySale] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
@@ -1158,12 +1155,9 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
       );
     }
 
-    if (selectedPriceRanges.length > 0) {
+    if (priceRange[0] !== MIN_PRICE || priceRange[1] !== MAX_PRICE) {
       result = result.filter(product => 
-        selectedPriceRanges.some(rangeIndex => {
-          const range = priceRanges[rangeIndex];
-          return product.price >= range.min && product.price < range.max;
-        })
+        product.price >= priceRange[0] && product.price <= priceRange[1]
       );
     }
 
@@ -1175,7 +1169,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     }
 
     return result;
-  }, [selectedCategory, selectedCategories, searchQuery, selectedPriceRanges, showOnlyNew, showOnlySale]);
+  }, [selectedCategory, selectedCategories, searchQuery, priceRange, showOnlyNew, showOnlySale]);
 
   // Categorized products
   const featuredProducts = useMemo(() => products.filter(p => p.isFeatured), []);
@@ -1193,14 +1187,15 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
 
   const clearFilters = () => {
     setSelectedCategories([]);
-    setSelectedPriceRanges([]);
+    setPriceRange([MIN_PRICE, MAX_PRICE]);
     setShowOnlyNew(false);
     setShowOnlySale(false);
     setSearchQuery("");
     toast.success("Filters cleared");
   };
 
-  const hasActiveFilters = selectedCategories.length > 0 || selectedPriceRanges.length > 0 || showOnlyNew || showOnlySale || searchQuery.trim();
+  const hasPriceFilter = priceRange[0] !== MIN_PRICE || priceRange[1] !== MAX_PRICE;
+  const hasActiveFilters = selectedCategories.length > 0 || hasPriceFilter || showOnlyNew || showOnlySale || searchQuery.trim();
 
   const handleTryOn = (product: Product) => {
     toast.success(`Starting virtual try-on for ${product.name}`);
@@ -1244,13 +1239,9 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     );
   };
 
-  const togglePriceRange = (index: number) => {
-    setSelectedPriceRanges(prev =>
-      prev.includes(index)
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    );
-  };
+  const handlePriceRangeChange = useCallback((values: number[]) => {
+    setPriceRange([values[0], values[1]]);
+  }, []);
 
   return (
     <section id="product-gallery" className="py-16 px-6 bg-gradient-hero">
@@ -1303,32 +1294,46 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button variant="glass" size="sm">
                   <Filter className="w-4 h-4" />
                   Price
-                  {selectedPriceRanges.length > 0 && (
+                  {hasPriceFilter && (
                     <Badge className="ml-2 bg-accent text-accent-foreground text-xs">
-                      {selectedPriceRanges.length}
+                      ₹{priceRange[0].toLocaleString()} – ₹{priceRange[1].toLocaleString()}
                     </Badge>
                   )}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 bg-background border-border z-50">
-                <DropdownMenuLabel>Price Range</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {priceRanges.map((range, index) => (
-                  <DropdownMenuCheckboxItem
-                    key={index}
-                    checked={selectedPriceRanges.includes(index)}
-                    onCheckedChange={() => togglePriceRange(index)}
-                  >
-                    {range.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 bg-background border-border z-50">
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-foreground">Price Range</p>
+                  <Slider
+                    min={MIN_PRICE}
+                    max={MAX_PRICE}
+                    step={50}
+                    value={[priceRange[0], priceRange[1]]}
+                    onValueChange={handlePriceRangeChange}
+                    className="w-full"
+                  />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>₹{priceRange[0].toLocaleString()}</span>
+                    <span>₹{priceRange[1].toLocaleString()}</span>
+                  </div>
+                  {hasPriceFilter && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => setPriceRange([MIN_PRICE, MAX_PRICE])}
+                    >
+                      Reset Price
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters}>
