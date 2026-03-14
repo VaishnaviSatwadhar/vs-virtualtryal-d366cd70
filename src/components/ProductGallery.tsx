@@ -980,10 +980,9 @@ const ProductCard = ({
       </Button>
 
       {/* Try On Button */}
-      <div className="absolute bottom-3 left-3 right-3">
-        <Button variant="glow" size="sm" className="w-full h-7 text-xs px-2 py-0" onClick={() => onTryOn(product)}>
-          <Eye className="w-3 h-3" />
-          Try On
+      <div className="absolute bottom-3 right-3">
+        <Button variant="glow" size="icon" className="h-8 w-8 rounded-full" onClick={() => onTryOn(product)}>
+          <Eye className="w-4 h-4" />
         </Button>
       </div>
     </div>
