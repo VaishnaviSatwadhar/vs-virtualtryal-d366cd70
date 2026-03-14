@@ -1194,7 +1194,8 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     toast.success("Filters cleared");
   };
 
-  const hasActiveFilters = selectedCategories.length > 0 || selectedPriceRanges.length > 0 || showOnlyNew || showOnlySale || searchQuery.trim();
+  const hasPriceFilter = priceRange[0] !== MIN_PRICE || priceRange[1] !== MAX_PRICE;
+  const hasActiveFilters = selectedCategories.length > 0 || hasPriceFilter || showOnlyNew || showOnlySale || searchQuery.trim();
 
   const handleTryOn = (product: Product) => {
     toast.success(`Starting virtual try-on for ${product.name}`);
