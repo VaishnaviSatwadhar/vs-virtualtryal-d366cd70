@@ -1155,12 +1155,9 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
       );
     }
 
-    if (selectedPriceRanges.length > 0) {
+    if (priceRange[0] !== MIN_PRICE || priceRange[1] !== MAX_PRICE) {
       result = result.filter(product => 
-        selectedPriceRanges.some(rangeIndex => {
-          const range = priceRanges[rangeIndex];
-          return product.price >= range.min && product.price < range.max;
-        })
+        product.price >= priceRange[0] && product.price <= priceRange[1]
       );
     }
 
