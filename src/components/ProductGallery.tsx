@@ -906,13 +906,8 @@ const categoryLabels = {
   jewelry: "Jewelry",
 };
 
-const priceRanges = [
-  { label: "Under ₹4,000", min: 0, max: 4000 },
-  { label: "₹4,000 - ₹8,000", min: 4000, max: 8000 },
-  { label: "₹8,000 - ₹16,000", min: 8000, max: 16000 },
-  { label: "₹16,000 - ₹40,000", min: 16000, max: 40000 },
-  { label: "Over ₹40,000", min: 40000, max: Infinity },
-];
+const MIN_PRICE = 0;
+const MAX_PRICE = 50000;
 
 interface ProductGalleryProps {
   selectedCategory?: string;
