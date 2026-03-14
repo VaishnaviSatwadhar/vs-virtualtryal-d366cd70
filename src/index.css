@@ -58,7 +58,7 @@
 
     /* Shadows and glows */
     --shadow-glow: 0 0 20px hsl(220 100% 60% / 0.3);
-    --shadow-accent-glow: 0 0 30px hsl(320 100% 65% / 0.4);
+    --shadow-accent-glow: 0 0 30px hsl(174 91% 55% / 0.4);
     --shadow-card: 0 8px 32px hsl(240 10% 4% / 0.5);
 
     /* Animation timing */
