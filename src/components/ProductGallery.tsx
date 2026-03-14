@@ -1239,13 +1239,9 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     );
   };
 
-  const togglePriceRange = (index: number) => {
-    setSelectedPriceRanges(prev =>
-      prev.includes(index)
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    );
-  };
+  const handlePriceRangeChange = useCallback((values: number[]) => {
+    setPriceRange([values[0], values[1]]);
+  }, []);
 
   return (
     <section id="product-gallery" className="py-16 px-6 bg-gradient-hero">
