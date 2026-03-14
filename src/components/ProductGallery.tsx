@@ -1187,7 +1187,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
 
   const clearFilters = () => {
     setSelectedCategories([]);
-    setSelectedPriceRanges([]);
+    setPriceRange([MIN_PRICE, MAX_PRICE]);
     setShowOnlyNew(false);
     setShowOnlySale(false);
     setSearchQuery("");
