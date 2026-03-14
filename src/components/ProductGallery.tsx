@@ -1294,32 +1294,46 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button variant="glass" size="sm">
                   <Filter className="w-4 h-4" />
                   Price
-                  {selectedPriceRanges.length > 0 && (
+                  {hasPriceFilter && (
                     <Badge className="ml-2 bg-accent text-accent-foreground text-xs">
-                      {selectedPriceRanges.length}
+                      ₹{priceRange[0].toLocaleString()} – ₹{priceRange[1].toLocaleString()}
                     </Badge>
                   )}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 bg-background border-border z-50">
-                <DropdownMenuLabel>Price Range</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {priceRanges.map((range, index) => (
-                  <DropdownMenuCheckboxItem
-                    key={index}
-                    checked={selectedPriceRanges.includes(index)}
-                    onCheckedChange={() => togglePriceRange(index)}
-                  >
-                    {range.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 bg-background border-border z-50">
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-foreground">Price Range</p>
+                  <Slider
+                    min={MIN_PRICE}
+                    max={MAX_PRICE}
+                    step={50}
+                    value={[priceRange[0], priceRange[1]]}
+                    onValueChange={handlePriceRangeChange}
+                    className="w-full"
+                  />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>₹{priceRange[0].toLocaleString()}</span>
+                    <span>₹{priceRange[1].toLocaleString()}</span>
+                  </div>
+                  {hasPriceFilter && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => setPriceRange([MIN_PRICE, MAX_PRICE])}
+                    >
+                      Reset Price
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters}>
