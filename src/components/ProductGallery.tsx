@@ -1244,8 +1244,15 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
   }, []);
 
   return (
-    <section id="product-gallery" className="py-16 px-6 bg-gradient-hero">
-      <div className="max-w-7xl mx-auto">
+    <section id="product-gallery" className="py-16 px-6 relative overflow-hidden">
+      {/* Rich layered background */}
+      <div className="absolute inset-0 bg-gradient-hero" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(174_91%_55%/0.08),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_100%,hsl(220_100%_60%/0.06),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_60%,hsl(270_50%_15%/0.1),transparent)]" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
           
