@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ interface CheckoutModalProps {
 }
 
 export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProps) => {
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<"details" | "success">("details");
   const [orderId, setOrderId] = useState("");
@@ -116,8 +118,24 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
         theme: {
           color: "#27F5E0",
         },
-        handler: function (response: any) {
-          // Payment successful
+        handler: async function (response: any) {
+          // Save order to database
+          if (user) {
+            await supabase.from("orders").insert({
+              user_id: user.id,
+              product_name: product.name,
+              product_image: product.image,
+              product_price: product.price,
+              total_amount: total,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              status: "paid",
+              delivery_address: `${address}, ${city} - ${pincode}`,
+              customer_name: name,
+              customer_email: email,
+              customer_phone: phone,
+            });
+          }
           setOrderId(response.razorpay_payment_id);
           setStep("success");
           toast.success("Payment successful! 🎉");
