@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, ShoppingBag } from "lucide-react";
 import { VirtualTryOnHero } from "@/components/VirtualTryOnHero";
 import { CategorySelector } from "@/components/CategorySelector";
 import { VirtualTryOnInterface } from "@/components/VirtualTryOnInterface";
