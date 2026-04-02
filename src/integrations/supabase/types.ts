@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      orders: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_address: string | null
+          id: string
+          product_image: string
+          product_name: string
+          product_price: number
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          status: string
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_address?: string | null
+          id?: string
+          product_image: string
+          product_name: string
+          product_price: number
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          status?: string
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_address?: string | null
+          id?: string
+          product_image?: string
+          product_name?: string
+          product_price?: number
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          status?: string
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
