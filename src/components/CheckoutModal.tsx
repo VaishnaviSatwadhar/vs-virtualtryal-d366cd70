@@ -32,6 +32,7 @@ interface CheckoutModalProps {
 }
 
 export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProps) => {
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<"details" | "success">("details");
   const [orderId, setOrderId] = useState("");
