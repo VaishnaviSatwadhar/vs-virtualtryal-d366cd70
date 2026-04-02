@@ -112,6 +112,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <Button variant="glass" size="sm" onClick={() => navigate("/orders")} className="gap-2">
+          <ShoppingBag className="h-4 w-4" />
+          <span className="hidden sm:inline">Orders</span>
+        </Button>
         <Wishlist
           onTryOn={handleProductTryOn}
           onAddToCart={handleAddToCart}
