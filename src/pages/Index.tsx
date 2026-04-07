@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut, User, ShoppingBag } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 import { VirtualTryOnHero } from "@/components/VirtualTryOnHero";
 import { CategorySelector } from "@/components/CategorySelector";
 import { VirtualTryOnInterface } from "@/components/VirtualTryOnInterface";
@@ -116,6 +117,7 @@ const Index = () => {
           <ShoppingBag className="h-4 w-4" />
           <span className="hidden sm:inline">Orders</span>
         </Button>
+        <NotificationBell />
         <Wishlist
           onTryOn={handleProductTryOn}
           onAddToCart={handleAddToCart}
