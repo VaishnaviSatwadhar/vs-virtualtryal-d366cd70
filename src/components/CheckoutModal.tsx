@@ -59,7 +59,7 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
   if (!product) return null;
 
   const subtotal = product.price;
-  const shipping = subtotal > 8000 ? 0 : 499;
+  const shipping = 0;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
