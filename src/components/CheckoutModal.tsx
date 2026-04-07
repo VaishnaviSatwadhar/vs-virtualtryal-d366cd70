@@ -202,9 +202,7 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
                     <span className="text-foreground">
-                      {shipping === 0 ? (
-                        <Badge variant="secondary" className="bg-success/20 text-success">Free</Badge>
-                      ) : `₹${shipping.toFixed(2)}`}
+                      <Badge variant="secondary" className="bg-success/20 text-success">Free</Badge>
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
