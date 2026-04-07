@@ -135,6 +135,19 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
               customer_email: email,
               customer_phone: phone,
             });
+
+            // Create in-app notification
+            await supabase.from("notifications").insert({
+              user_id: user.id,
+              title: "🎉 Order Placed!",
+              message: `Your order for ${product.name} (₹${total.toFixed(2)}) has been confirmed.`,
+              type: "order",
+              metadata: {
+                product_name: product.name,
+                payment_id: response.razorpay_payment_id,
+                total: total,
+              },
+            });
           }
           setOrderId(response.razorpay_payment_id);
           setStep("success");
