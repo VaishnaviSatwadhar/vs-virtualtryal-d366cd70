@@ -1124,8 +1124,20 @@ const ProductCard = ({
         />
       </Button>
 
-      {/* Try On Button */}
-      <div className="absolute bottom-3 right-3">
+      {/* Try On & View Image Buttons */}
+      <div className="absolute bottom-3 right-3 flex gap-1.5">
+        <Button
+          variant="glass"
+          size="icon"
+          className="h-8 w-8 rounded-full shadow-lg"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(product.image, '_blank');
+          }}
+          title="View product image"
+        >
+          <ZoomIn className="w-4 h-4" />
+        </Button>
         <Button variant="glow" size="icon" className="h-8 w-8 rounded-full" onClick={() => onTryOn(product)}>
           <Eye className="w-4 h-4" />
         </Button>
