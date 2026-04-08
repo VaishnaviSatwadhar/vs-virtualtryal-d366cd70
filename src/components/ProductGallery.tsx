@@ -23,7 +23,8 @@ import {
   TrendingUp,
   Tag,
   ChevronRight,
-  Flame
+  Flame,
+  ZoomIn
 } from "lucide-react";
 import { toast } from "sonner";
 import { CheckoutModal } from "./CheckoutModal";
