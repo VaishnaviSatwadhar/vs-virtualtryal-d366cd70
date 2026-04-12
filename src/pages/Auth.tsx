@@ -176,6 +176,11 @@ const Auth = () => {
       if (result.error) {
         throw result.error;
       }
+
+      if (!result.redirected) {
+        // Tokens received directly, session is set — go to home
+        navigate('/');
+      }
     } catch (error: any) {
       setGoogleLoading(false);
       toast({ title: "Error", description: error.message || "Failed to sign in with Google.", variant: "destructive" });
