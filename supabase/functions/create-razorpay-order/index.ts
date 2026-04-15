@@ -21,7 +21,7 @@ serve(async (req) => {
       );
     }
 
-    const RAZORPAY_KEY_ID = "rzp_test_SY4LheocLHNh5f";
+    const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
 
     if (!RAZORPAY_KEY_SECRET) {
