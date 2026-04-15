@@ -95,8 +95,12 @@ export const CheckoutModal = ({ open, onOpenChange, product }: CheckoutModalProp
         },
       });
 
-      if (error || !data?.order_id) {
+      if (error) {
         throw new Error(error?.message || "Failed to create order");
+      }
+
+      if (!data?.ok || !data?.order_id) {
+        throw new Error(data?.error || "Failed to create order");
       }
 
       // Open Razorpay checkout
