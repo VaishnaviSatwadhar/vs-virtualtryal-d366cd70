@@ -21,10 +21,10 @@ serve(async (req) => {
       );
     }
 
-    const RAZORPAY_KEY_ID = "rzp_test_SY4LheocLHNh5f";
+    const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
 
-    if (!RAZORPAY_KEY_SECRET) {
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
       return new Response(
         JSON.stringify({ error: "Razorpay not configured" }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
