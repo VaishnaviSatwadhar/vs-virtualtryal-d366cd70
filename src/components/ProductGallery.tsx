@@ -1126,11 +1126,25 @@ const ProductCard = ({
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
       />
       {selectedIndex > 0 && (
-        <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none mix-blend-color transition-colors duration-300"
-          style={{ backgroundColor: selectedColor, opacity: 0.55 }}
-        />
+        <>
+          {/* Desaturate the underlying image so the color tint reads true */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none transition-all duration-300"
+            style={{
+              backgroundImage: `url(${product.image})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "grayscale(1) contrast(1.05)",
+            }}
+          />
+          {/* Apply the selected color as a multiply tint */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none mix-blend-multiply transition-colors duration-300"
+            style={{ backgroundColor: selectedColor }}
+          />
+        </>
       )}
       
       {/* Badges */}
