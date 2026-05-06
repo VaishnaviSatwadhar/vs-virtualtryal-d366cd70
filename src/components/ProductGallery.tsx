@@ -41,6 +41,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 
+// Map common hex colors to human-readable names for accessibility & display
+const COLOR_NAMES: Record<string, string> = {
+  "#000000": "Black",
+  "#FFFFFF": "White",
+  "#FF6B6B": "Coral",
+  "#4ECDC4": "Teal",
+  "#C0C0C0": "Silver",
+  "#FFD700": "Gold",
+  "#1E3A8A": "Navy",
+  "#374151": "Charcoal",
+  "#DC2626": "Red",
+  "#8B4513": "Brown",
+  "#4169E1": "Royal Blue",
+  "#9B59B6": "Purple",
+  "#065F46": "Forest Green",
+  "#FCD34D": "Yellow",
+  "#FDE047": "Lemon",
+  "#FBBF24": "Amber",
+  "#6B7280": "Gray",
+  "#E5E7EB": "Light Gray",
+  "#E0BFB8": "Rose Gold",
+  "#F5DEB3": "Wheat",
+  "#87CEEB": "Sky Blue",
+  "#FF69B4": "Pink",
+};
+
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
 import denimJacket from "@/assets/products/denim-jacket.jpg";
