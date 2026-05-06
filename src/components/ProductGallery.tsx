@@ -1312,8 +1312,8 @@ const HorizontalProductSection = ({
 }: {
   products: Product[];
   onTryOn: (product: Product) => void;
-  onAddToCart: (product: Product) => void;
-  onBuyNow: (product: Product) => void;
+  onAddToCart: (product: Product, color?: string) => void;
+  onBuyNow: (product: Product, color?: string) => void;
   onToggleFavorite: (product: Product) => void;
   isInWishlist: (name: string) => boolean;
 }) => (
@@ -1415,7 +1415,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     }
   };
 
-  const handleAddToCartClick = (product: Product) => {
+  const handleAddToCartClick = (product: Product, color?: string) => {
     if (onAddToCart) {
       onAddToCart({
         id: product.id,
@@ -1424,12 +1424,13 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
         price: product.price,
         originalPrice: product.originalPrice,
         image: product.image,
+        color,
       });
     }
   };
 
-  const handleBuyNow = (product: Product) => {
-    setCheckoutProduct(product);
+  const handleBuyNow = (product: Product, color?: string) => {
+    setCheckoutProduct({ ...product, selectedColor: color } as Product);
     setCheckoutOpen(true);
   };
 
