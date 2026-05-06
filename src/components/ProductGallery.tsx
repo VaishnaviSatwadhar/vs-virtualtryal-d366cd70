@@ -1,5 +1,6 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1115,36 +1116,50 @@ const ProductCard = ({
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]);
   const selectedIndex = product.colors.indexOf(selectedColor);
   const colorName = COLOR_NAMES[selectedColor.toUpperCase()] ?? selectedColor;
+  const [variantUrl, setVariantUrl] = useState<string>(product.image);
+  const [isRecoloring, setIsRecoloring] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (selectedIndex === 0) {
+      setVariantUrl(product.image);
+      return;
+    }
+    setIsRecoloring(true);
+    const absUrl = new URL(product.image, window.location.origin).href;
+    supabase.functions
+      .invoke("recolor-product", {
+        body: { productId: product.id, productName: product.name, imageUrl: absUrl, color: selectedColor },
+      })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data?.url) {
+          console.error("Recolor failed:", error || data?.error);
+          setVariantUrl(product.image);
+        } else {
+          setVariantUrl(data.url);
+        }
+      })
+      .finally(() => { if (!cancelled) setIsRecoloring(false); });
+    return () => { cancelled = true; };
+  }, [selectedColor, selectedIndex, product.id, product.image, product.name]);
 
   return (
   <Card className="group bg-gradient-card border-border overflow-hidden hover:shadow-card hover:scale-[1.02] transition-all duration-300">
     {/* Product Image */}
     <div className="aspect-square bg-muted/20 relative overflow-hidden">
       <img 
-        src={product.image} 
+        src={variantUrl} 
         alt={product.name}
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+        className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300"
       />
-      {selectedIndex > 0 && (
-        <>
-          {/* Desaturate the underlying image so the color tint reads true */}
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none transition-all duration-300"
-            style={{
-              backgroundImage: `url(${product.image})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              filter: "grayscale(1) contrast(1.05)",
-            }}
-          />
-          {/* Apply the selected color as a multiply tint */}
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none mix-blend-multiply transition-colors duration-300"
-            style={{ backgroundColor: selectedColor }}
-          />
-        </>
+      {isRecoloring && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <span className="text-xs text-foreground font-medium">Recoloring…</span>
+          </div>
+        </div>
       )}
       
       {/* Badges */}
