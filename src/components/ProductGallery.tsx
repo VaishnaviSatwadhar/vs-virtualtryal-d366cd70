@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,32 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
+
+// Map common hex colors to human-readable names for accessibility & display
+const COLOR_NAMES: Record<string, string> = {
+  "#000000": "Black",
+  "#FFFFFF": "White",
+  "#FF6B6B": "Coral",
+  "#4ECDC4": "Teal",
+  "#C0C0C0": "Silver",
+  "#FFD700": "Gold",
+  "#1E3A8A": "Navy",
+  "#374151": "Charcoal",
+  "#DC2626": "Red",
+  "#8B4513": "Brown",
+  "#4169E1": "Royal Blue",
+  "#9B59B6": "Purple",
+  "#065F46": "Forest Green",
+  "#FCD34D": "Yellow",
+  "#FDE047": "Lemon",
+  "#FBBF24": "Amber",
+  "#6B7280": "Gray",
+  "#E5E7EB": "Light Gray",
+  "#E0BFB8": "Rose Gold",
+  "#F5DEB3": "Wheat",
+  "#87CEEB": "Sky Blue",
+  "#FF69B4": "Pink",
+};
 
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
@@ -1065,6 +1092,7 @@ interface ProductGalleryProps {
     price: number;
     originalPrice?: number;
     image: string;
+    color?: string;
   }) => void;
 }
 
@@ -1079,11 +1107,16 @@ const ProductCard = ({
 }: { 
   product: Product; 
   onTryOn: (product: Product) => void;
-  onAddToCart: (product: Product) => void;
-  onBuyNow: (product: Product) => void;
+  onAddToCart: (product: Product, color?: string) => void;
+  onBuyNow: (product: Product, color?: string) => void;
   onToggleFavorite: (product: Product) => void;
   isWishlisted: boolean;
-}) => (
+}) => {
+  const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]);
+  const selectedIndex = product.colors.indexOf(selectedColor);
+  const colorName = COLOR_NAMES[selectedColor.toUpperCase()] ?? selectedColor;
+
+  return (
   <Card className="group bg-gradient-card border-border overflow-hidden hover:shadow-card hover:scale-[1.02] transition-all duration-300">
     {/* Product Image */}
     <div className="aspect-square bg-muted/20 relative overflow-hidden">
@@ -1092,6 +1125,13 @@ const ProductCard = ({
         alt={product.name}
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
       />
+      {selectedIndex > 0 && (
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none mix-blend-color transition-colors duration-300"
+          style={{ backgroundColor: selectedColor, opacity: 0.55 }}
+        />
+      )}
       
       {/* Badges */}
       <div className="absolute top-3 left-3 flex flex-col gap-2">
@@ -1168,17 +1208,30 @@ const ProductCard = ({
       </div>
 
       {/* Colors */}
-      <div className="flex items-center gap-1 mb-3">
-        {product.colors.slice(0, 4).map((color, index) => (
-          <div 
-            key={index}
-            className="w-3 h-3 rounded-full border border-border"
-            style={{ backgroundColor: color }}
-          />
-        ))}
-        {product.colors.length > 4 && (
-          <span className="text-xs text-muted-foreground">+{product.colors.length - 4}</span>
-        )}
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        {product.colors.map((color, index) => {
+          const isSelected = color === selectedColor;
+          return (
+            <button
+              key={index}
+              type="button"
+              aria-label={`Select color ${COLOR_NAMES[color.toUpperCase()] ?? color}`}
+              aria-pressed={isSelected}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedColor(color);
+              }}
+              className={cn(
+                "w-5 h-5 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isSelected
+                  ? "ring-2 ring-primary ring-offset-2 ring-offset-background border-primary scale-110"
+                  : "border-border"
+              )}
+              style={{ backgroundColor: color }}
+            />
+          );
+        })}
+        <span className="text-xs text-muted-foreground ml-1 capitalize">{colorName}</span>
       </div>
 
       {/* Price and Actions */}
@@ -1199,14 +1252,14 @@ const ProductCard = ({
             variant="hero" 
             size="sm" 
             className="flex-1 text-xs"
-            onClick={() => onBuyNow(product)}
+            onClick={() => onBuyNow(product, selectedColor)}
           >
             Buy Now
           </Button>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => onAddToCart(product)}
+            onClick={() => onAddToCart(product, selectedColor)}
           >
             <ShoppingCart className="w-3 h-3" />
           </Button>
@@ -1215,6 +1268,7 @@ const ProductCard = ({
     </div>
   </Card>
 );
+};
 
 // Section Header Component
 const SectionHeader = ({ 
@@ -1258,8 +1312,8 @@ const HorizontalProductSection = ({
 }: {
   products: Product[];
   onTryOn: (product: Product) => void;
-  onAddToCart: (product: Product) => void;
-  onBuyNow: (product: Product) => void;
+  onAddToCart: (product: Product, color?: string) => void;
+  onBuyNow: (product: Product, color?: string) => void;
   onToggleFavorite: (product: Product) => void;
   isInWishlist: (name: string) => boolean;
 }) => (
@@ -1361,7 +1415,7 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
     }
   };
 
-  const handleAddToCartClick = (product: Product) => {
+  const handleAddToCartClick = (product: Product, color?: string) => {
     if (onAddToCart) {
       onAddToCart({
         id: product.id,
@@ -1370,12 +1424,13 @@ export const ProductGallery = ({ selectedCategory, onProductTryOn, onAddToCart }
         price: product.price,
         originalPrice: product.originalPrice,
         image: product.image,
+        color,
       });
     }
   };
 
-  const handleBuyNow = (product: Product) => {
-    setCheckoutProduct(product);
+  const handleBuyNow = (product: Product, color?: string) => {
+    setCheckoutProduct({ ...product, selectedColor: color } as Product);
     setCheckoutOpen(true);
   };
 

@@ -62,13 +62,14 @@ const Index = () => {
     price: number;
     originalPrice?: number;
     image: string;
+    color?: string;
   }) => {
     setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
+      const existingItem = prev.find(item => item.id === product.id && item.color === product.color);
       if (existingItem) {
         toast.success(`Updated ${product.name} quantity in cart`);
         return prev.map(item =>
-          item.id === product.id
+          item.id === product.id && item.color === product.color
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
