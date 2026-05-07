@@ -26,12 +26,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { productId, productName, imageUrl, color } = await req.json();
+    const { productId, productName, imageUrl, color, view } = await req.json();
     if (!productId || !imageUrl || !color) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const viewKey: "front" | "back" | "side" =
+      view === "back" || view === "side" ? view : "front";
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,12 +41,13 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const cacheKey = `${productId}/${slug(color)}.png`;
+    const fileName = `${slug(color)}-${viewKey}.png`;
+    const cacheKey = `${productId}/${fileName}`;
 
     // Check cache
     const { data: existing } = await supabase.storage
-      .from("product-variants").list(productId, { search: `${slug(color)}.png` });
-    if (existing && existing.some((f) => f.name === `${slug(color)}.png`)) {
+      .from("product-variants").list(productId, { search: fileName });
+    if (existing && existing.some((f) => f.name === fileName)) {
       const { data: pub } = supabase.storage.from("product-variants").getPublicUrl(cacheKey);
       return new Response(JSON.stringify({ url: pub.publicUrl, cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -60,7 +63,13 @@ Deno.serve(async (req) => {
     const srcDataUrl = `data:${srcMime};base64,${srcB64}`;
 
     const cName = colorName(color);
-    const prompt = `Recolor ONLY the main clothing/product item in this image to ${cName} (hex ${color}). Keep the exact same garment shape, fabric texture, folds, lighting, shadows, background, and composition. Do not change anything except the color of the product itself. Photorealistic, high quality.`;
+    const viewInstruction =
+      viewKey === "front"
+        ? "Show a clear FRONT view of the product."
+        : viewKey === "back"
+        ? "Generate the BACK view of the same product (rear side), as if the camera moved 180° around it. Maintain identical garment design, proportions, fabric, and studio lighting. Show seams, tags, or back details realistically."
+        : "Generate the SIDE view (90° profile) of the same product. Maintain identical garment design, proportions, fabric, and studio lighting.";
+    const prompt = `Recolor ONLY the main clothing/product item to ${cName} (hex ${color}). ${viewInstruction} Keep the same fabric texture, lighting, shadows, and clean background. Photorealistic, high quality, e-commerce product shot.`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
