@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CheckoutModal } from "./CheckoutModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1118,6 +1119,10 @@ const ProductCard = ({
   const colorName = COLOR_NAMES[selectedColor.toUpperCase()] ?? selectedColor;
   const [variantUrl, setVariantUrl] = useState<string>(product.image);
   const [isRecoloring, setIsRecoloring] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [activeView, setActiveView] = useState<"front" | "back" | "side">("front");
+  const [viewUrls, setViewUrls] = useState<Record<string, string>>({});
+  const [viewLoading, setViewLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1143,6 +1148,50 @@ const ProductCard = ({
       .finally(() => { if (!cancelled) setIsRecoloring(false); });
     return () => { cancelled = true; };
   }, [selectedColor, selectedIndex, product.id, product.image, product.name]);
+
+  // Reset cached view URLs whenever color changes
+  useEffect(() => {
+    setViewUrls({});
+    setActiveView("front");
+  }, [selectedColor]);
+
+  // Fetch the active view when modal opens or view/color changes
+  useEffect(() => {
+    if (!detailOpen) return;
+    const cacheK = `${selectedColor}-${activeView}`;
+    if (viewUrls[cacheK]) return;
+
+    // Front view + default color → use original asset
+    if (activeView === "front" && selectedIndex === 0) {
+      setViewUrls((p) => ({ ...p, [cacheK]: product.image }));
+      return;
+    }
+
+    let cancelled = false;
+    setViewLoading(true);
+    const absUrl = new URL(product.image, window.location.origin).href;
+    supabase.functions
+      .invoke("recolor-product", {
+        body: {
+          productId: product.id,
+          productName: product.name,
+          imageUrl: absUrl,
+          color: selectedColor,
+          view: activeView,
+        },
+      })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data?.url) {
+          console.error("View generation failed:", error || data?.error);
+          setViewUrls((p) => ({ ...p, [cacheK]: product.image }));
+        } else {
+          setViewUrls((p) => ({ ...p, [cacheK]: data.url }));
+        }
+      })
+      .finally(() => { if (!cancelled) setViewLoading(false); });
+    return () => { cancelled = true; };
+  }, [detailOpen, activeView, selectedColor, selectedIndex, product.id, product.image, product.name, viewUrls]);
 
   return (
   <Card className="group bg-gradient-card border-border overflow-hidden hover:shadow-card hover:scale-[1.02] transition-all duration-300">
@@ -1202,9 +1251,10 @@ const ProductCard = ({
           className="h-8 w-8 rounded-full shadow-lg"
           onClick={(e) => {
             e.stopPropagation();
-            window.open(product.image, '_blank');
+            setActiveView("front");
+            setDetailOpen(true);
           }}
-          title="View product image"
+          title="View Front / Back / Side"
         >
           <ZoomIn className="w-4 h-4" />
         </Button>
@@ -1295,6 +1345,76 @@ const ProductCard = ({
         </div>
       </div>
     </div>
+
+    {/* 3-View Detail Modal */}
+    <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>
+            {product.name}
+            <span className="ml-2 text-xs font-normal text-muted-foreground capitalize">
+              · {colorName}
+            </span>
+          </DialogTitle>
+        </DialogHeader>
+        <Tabs value={activeView} onValueChange={(v) => setActiveView(v as "front" | "back" | "side")}>
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="front">Front</TabsTrigger>
+            <TabsTrigger value="back">Back</TabsTrigger>
+            <TabsTrigger value="side">Side</TabsTrigger>
+          </TabsList>
+          {(["front", "back", "side"] as const).map((v) => (
+            <TabsContent key={v} value={v} className="mt-4">
+              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted/20">
+                {viewUrls[`${selectedColor}-${v}`] ? (
+                  <img
+                    src={viewUrls[`${selectedColor}-${v}`]}
+                    alt={`${product.name} ${v} view`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+                      <span className="text-sm text-muted-foreground">
+                        Generating {v} view…
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {viewLoading && activeView === v && viewUrls[`${selectedColor}-${v}`] && (
+                  <div className="absolute top-2 right-2 animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                )}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+
+        {/* Color swatches inside modal */}
+        <div className="flex items-center gap-2 flex-wrap pt-2">
+          <span className="text-xs text-muted-foreground mr-1">Color:</span>
+          {product.colors.map((color, i) => {
+            const isSel = color === selectedColor;
+            return (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Select color ${COLOR_NAMES[color.toUpperCase()] ?? color}`}
+                aria-pressed={isSel}
+                onClick={() => setSelectedColor(color)}
+                className={cn(
+                  "w-6 h-6 rounded-full border transition-all",
+                  isSel
+                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background border-primary scale-110"
+                    : "border-border hover:scale-110"
+                )}
+                style={{ backgroundColor: color }}
+              />
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
   </Card>
 );
 };
