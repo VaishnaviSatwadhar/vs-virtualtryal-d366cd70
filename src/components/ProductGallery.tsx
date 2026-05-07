@@ -25,6 +25,7 @@ import {
   TrendingUp,
   Tag,
   ChevronRight,
+  ChevronLeft,
   Flame,
   ZoomIn
 } from "lucide-react";
@@ -1385,6 +1386,39 @@ const ProductCard = ({
                 {viewLoading && activeView === v && viewUrls[`${selectedColor}-${v}`] && (
                   <div className="absolute top-2 right-2 animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
                 )}
+
+                {/* Rotate arrows */}
+                <Button
+                  variant="glass"
+                  size="icon"
+                  aria-label="Previous view"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-lg"
+                  onClick={() => {
+                    const order = ["front", "side", "back"] as const;
+                    const idx = order.indexOf(activeView);
+                    setActiveView(order[(idx - 1 + order.length) % order.length]);
+                  }}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="glass"
+                  size="icon"
+                  aria-label="Next view"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-lg"
+                  onClick={() => {
+                    const order = ["front", "side", "back"] as const;
+                    const idx = order.indexOf(activeView);
+                    setActiveView(order[(idx + 1) % order.length]);
+                  }}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+
+                {/* View label badge */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-background/70 backdrop-blur-sm border border-border text-xs font-medium capitalize">
+                  {activeView} view
+                </div>
               </div>
             </TabsContent>
           ))}
