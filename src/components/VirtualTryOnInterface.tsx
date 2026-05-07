@@ -1001,11 +1001,68 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
               {tryonResult && (
                 <>
-                  <img 
-                    src={tryonResult} 
-                    alt="Virtual try-on result" 
-                    className="w-full rounded-lg shadow-lg"
-                  />
+                  <div className="relative w-full rounded-lg overflow-hidden shadow-lg bg-muted/20">
+                    {resultViews[activeResultView] ? (
+                      <img
+                        src={resultViews[activeResultView]!}
+                        alt={`Virtual try-on ${activeResultView} view`}
+                        className="w-full"
+                      />
+                    ) : (
+                      <div className="aspect-[3/4] flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                          <span className="text-sm text-muted-foreground capitalize">
+                            Generating {activeResultView} view…
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Rotate arrows */}
+                    <Button
+                      variant="glass"
+                      size="icon"
+                      aria-label="Previous view"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-lg"
+                      onClick={() => cycleView(-1)}
+                      disabled={generatingView !== null}
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="glass"
+                      size="icon"
+                      aria-label="Next view"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-lg"
+                      onClick={() => cycleView(1)}
+                      disabled={generatingView !== null}
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+
+                    {/* View label */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-background/70 backdrop-blur-sm border border-border text-xs font-medium capitalize">
+                      {activeResultView} view
+                    </div>
+                  </div>
+
+                  {/* View tab buttons */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["front", "side", "back"] as const).map((v) => (
+                      <Button
+                        key={v}
+                        variant={activeResultView === v ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => (resultViews[v] ? setActiveResultView(v) : generateView(v))}
+                        disabled={generatingView !== null}
+                        className="capitalize"
+                      >
+                        {generatingView === v ? <Loader2 className="h-3 w-3 animate-spin" /> : v}
+                      </Button>
+                    ))}
+                  </div>
+
                   <Button
                     onClick={downloadImage}
                     variant="outline"
