@@ -525,15 +525,16 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   };
 
   const downloadImage = () => {
-    if (!tryonResult) {
+    const current = resultViews[activeResultView] || tryonResult;
+    if (!current) {
       toast.error("No image to download");
       return;
     }
 
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().split('T')[0];
-    link.download = `tryon_${selectedProduct?.name.replace(/\s+/g, '_')}_${timestamp}.png`;
-    link.href = tryonResult;
+    link.download = `tryon_${selectedProduct?.name.replace(/\s+/g, '_')}_${activeResultView}_${timestamp}.png`;
+    link.href = current;
     link.click();
     toast.success("Image downloaded!");
   };
