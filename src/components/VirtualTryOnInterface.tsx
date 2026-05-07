@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag, RotateCcw, Settings, Ruler } from "lucide-react";
+import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag, RotateCcw, Settings, Ruler, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -54,6 +54,9 @@ const RESOLUTION_CONFIG: Record<CameraResolution, { width: number; height: numbe
 export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: VirtualTryOnInterfaceProps) => {
   const [userImage, setUserImage] = useState<string | null>(null);
   const [tryonResult, setTryonResult] = useState<string | null>(null);
+  const [resultViews, setResultViews] = useState<Record<"front" | "back" | "side", string | null>>({ front: null, back: null, side: null });
+  const [activeResultView, setActiveResultView] = useState<"front" | "back" | "side">("front");
+  const [generatingView, setGeneratingView] = useState<"front" | "back" | "side" | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [myProducts, setMyProducts] = useState<Product[]>([]); // User's selected products
   const [showGallery, setShowGallery] = useState(false);
@@ -442,6 +445,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
       if (data?.image) {
         setTryonResult(data.image);
+        setResultViews({ front: data.image, back: null, side: null });
+        setActiveResultView("front");
         toast.success("✨ Virtual try-on complete! Looking great!", { duration: 5000 });
         toast.info("💡 Tip: Try changing the background or trying different items!", { duration: 4000 });
       } else {
@@ -465,16 +470,71 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     }
   };
 
+  const generateView = useCallback(async (view: "front" | "back" | "side") => {
+    if (!userImage || !selectedProduct) return;
+    if (resultViews[view]) {
+      setActiveResultView(view);
+      return;
+    }
+    setGeneratingView(view);
+    setActiveResultView(view);
+    try {
+      let clothingImageData = selectedProduct.image;
+      if (typeof selectedProduct.image === 'string' && !selectedProduct.image.startsWith('data:')) {
+        const response = await fetch(selectedProduct.image);
+        const blob = await response.blob();
+        clothingImageData = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      }
+      const { data, error } = await supabase.functions.invoke('virtual-tryon', {
+        body: {
+          userImage,
+          clothingImage: clothingImageData,
+          clothingName: selectedProduct.name,
+          backgroundType,
+          view,
+        }
+      });
+      if (error) throw error;
+      if (data?.image) {
+        setResultViews((prev) => ({ ...prev, [view]: data.image }));
+        if (view === "front") setTryonResult(data.image);
+      } else {
+        throw new Error(data?.error || "No image returned");
+      }
+    } catch (e: any) {
+      console.error("generateView error", e);
+      toast.error(`Failed to generate ${view} view`);
+    } finally {
+      setGeneratingView(null);
+    }
+  }, [userImage, selectedProduct, backgroundType, resultViews]);
+
+  const cycleView = (dir: 1 | -1) => {
+    const order: Array<"front" | "side" | "back"> = ["front", "side", "back"];
+    const idx = order.indexOf(activeResultView);
+    const next = order[(idx + dir + order.length) % order.length];
+    if (resultViews[next]) {
+      setActiveResultView(next);
+    } else {
+      generateView(next);
+    }
+  };
+
   const downloadImage = () => {
-    if (!tryonResult) {
+    const current = resultViews[activeResultView] || tryonResult;
+    if (!current) {
       toast.error("No image to download");
       return;
     }
 
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().split('T')[0];
-    link.download = `tryon_${selectedProduct?.name.replace(/\s+/g, '_')}_${timestamp}.png`;
-    link.href = tryonResult;
+    link.download = `tryon_${selectedProduct?.name.replace(/\s+/g, '_')}_${activeResultView}_${timestamp}.png`;
+    link.href = current;
     link.click();
     toast.success("Image downloaded!");
   };
@@ -942,11 +1002,68 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
               {tryonResult && (
                 <>
-                  <img 
-                    src={tryonResult} 
-                    alt="Virtual try-on result" 
-                    className="w-full rounded-lg shadow-lg"
-                  />
+                  <div className="relative w-full rounded-lg overflow-hidden shadow-lg bg-muted/20">
+                    {resultViews[activeResultView] ? (
+                      <img
+                        src={resultViews[activeResultView]!}
+                        alt={`Virtual try-on ${activeResultView} view`}
+                        className="w-full"
+                      />
+                    ) : (
+                      <div className="aspect-[3/4] flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                          <span className="text-sm text-muted-foreground capitalize">
+                            Generating {activeResultView} view…
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Rotate arrows */}
+                    <Button
+                      variant="glass"
+                      size="icon"
+                      aria-label="Previous view"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-lg"
+                      onClick={() => cycleView(-1)}
+                      disabled={generatingView !== null}
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="glass"
+                      size="icon"
+                      aria-label="Next view"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-lg"
+                      onClick={() => cycleView(1)}
+                      disabled={generatingView !== null}
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+
+                    {/* View label */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-background/70 backdrop-blur-sm border border-border text-xs font-medium capitalize">
+                      {activeResultView} view
+                    </div>
+                  </div>
+
+                  {/* View tab buttons */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["front", "side", "back"] as const).map((v) => (
+                      <Button
+                        key={v}
+                        variant={activeResultView === v ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => (resultViews[v] ? setActiveResultView(v) : generateView(v))}
+                        disabled={generatingView !== null}
+                        className="capitalize"
+                      >
+                        {generatingView === v ? <Loader2 className="h-3 w-3 animate-spin" /> : v}
+                      </Button>
+                    ))}
+                  </div>
+
                   <Button
                     onClick={downloadImage}
                     variant="outline"
