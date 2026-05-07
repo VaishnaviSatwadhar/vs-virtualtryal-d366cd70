@@ -31,7 +31,6 @@ import {
 import { toast } from "sonner";
 import { CheckoutModal } from "./CheckoutModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs as ViewTabs, TabsContent as ViewTabsContent, TabsList as ViewTabsList, TabsTrigger as ViewTabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
