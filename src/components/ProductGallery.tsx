@@ -25,6 +25,7 @@ import {
   TrendingUp,
   Tag,
   ChevronRight,
+  ChevronLeft,
   Flame,
   ZoomIn
 } from "lucide-react";
