@@ -12,8 +12,8 @@ serve(async (req) => {
 
   try {
     console.log("Virtual try-on request received");
-    const { userImage, clothingImage, clothingName, backgroundType = "original" } = await req.json();
-    console.log("Request data parsed successfully", { clothingName, backgroundType });
+    const { userImage, clothingImage, clothingName, backgroundType = "original", view = "front" } = await req.json();
+    console.log("Request data parsed successfully", { clothingName, backgroundType, view });
     
     // Input validation
     if (!userImage || typeof userImage !== 'string' || userImage.length > 1000000) {
@@ -53,8 +53,16 @@ serve(async (req) => {
                           backgroundType === "plain" ? "white studio background" : 
                           backgroundType === "professional" ? "professional studio background" : 
                           "keep original background";
-    
-    const prompt = `Virtual try-on: Fit the ${clothingName || 'item'} from image 2 onto the person in image 1. Match body pose, lighting, and proportions. ${bgInstruction}. If no person visible, respond "ERROR: No person detected". Output photorealistic result.`;
+
+    const viewKey = view === "back" || view === "side" ? view : "front";
+    const viewInstruction =
+      viewKey === "front"
+        ? "Show the FRONT view of the person."
+        : viewKey === "back"
+        ? "Show the BACK view of the same person (rotated 180°), same body, pose mirrored facing away. Show how the garment looks from behind."
+        : "Show the SIDE PROFILE view (90° rotation) of the same person wearing the garment.";
+
+    const prompt = `Virtual try-on: Fit the ${clothingName || 'item'} from image 2 onto the person in image 1. Match body proportions, skin tone, and lighting. ${viewInstruction} ${bgInstruction}. Keep the same person identity, hair, and skin. If no person visible, respond "ERROR: No person detected". Output photorealistic result.`;
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
