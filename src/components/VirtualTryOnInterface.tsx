@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag, RotateCcw, Settings, Ruler } from "lucide-react";
+import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X, ShoppingBag, RotateCcw, Settings, Ruler, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -54,6 +54,9 @@ const RESOLUTION_CONFIG: Record<CameraResolution, { width: number; height: numbe
 export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: VirtualTryOnInterfaceProps) => {
   const [userImage, setUserImage] = useState<string | null>(null);
   const [tryonResult, setTryonResult] = useState<string | null>(null);
+  const [resultViews, setResultViews] = useState<Record<"front" | "back" | "side", string | null>>({ front: null, back: null, side: null });
+  const [activeResultView, setActiveResultView] = useState<"front" | "back" | "side">("front");
+  const [generatingView, setGeneratingView] = useState<"front" | "back" | "side" | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [myProducts, setMyProducts] = useState<Product[]>([]); // User's selected products
   const [showGallery, setShowGallery] = useState(false);
@@ -442,6 +445,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
       if (data?.image) {
         setTryonResult(data.image);
+        setResultViews({ front: data.image, back: null, side: null });
+        setActiveResultView("front");
         toast.success("✨ Virtual try-on complete! Looking great!", { duration: 5000 });
         toast.info("💡 Tip: Try changing the background or trying different items!", { duration: 4000 });
       } else {
