@@ -470,6 +470,60 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     }
   };
 
+  const generateView = useCallback(async (view: "front" | "back" | "side") => {
+    if (!userImage || !selectedProduct) return;
+    if (resultViews[view]) {
+      setActiveResultView(view);
+      return;
+    }
+    setGeneratingView(view);
+    setActiveResultView(view);
+    try {
+      let clothingImageData = selectedProduct.image;
+      if (typeof selectedProduct.image === 'string' && !selectedProduct.image.startsWith('data:')) {
+        const response = await fetch(selectedProduct.image);
+        const blob = await response.blob();
+        clothingImageData = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      }
+      const { data, error } = await supabase.functions.invoke('virtual-tryon', {
+        body: {
+          userImage,
+          clothingImage: clothingImageData,
+          clothingName: selectedProduct.name,
+          backgroundType,
+          view,
+        }
+      });
+      if (error) throw error;
+      if (data?.image) {
+        setResultViews((prev) => ({ ...prev, [view]: data.image }));
+        if (view === "front") setTryonResult(data.image);
+      } else {
+        throw new Error(data?.error || "No image returned");
+      }
+    } catch (e: any) {
+      console.error("generateView error", e);
+      toast.error(`Failed to generate ${view} view`);
+    } finally {
+      setGeneratingView(null);
+    }
+  }, [userImage, selectedProduct, backgroundType, resultViews]);
+
+  const cycleView = (dir: 1 | -1) => {
+    const order: Array<"front" | "side" | "back"> = ["front", "side", "back"];
+    const idx = order.indexOf(activeResultView);
+    const next = order[(idx + dir + order.length) % order.length];
+    if (resultViews[next]) {
+      setActiveResultView(next);
+    } else {
+      generateView(next);
+    }
+  };
+
   const downloadImage = () => {
     if (!tryonResult) {
       toast.error("No image to download");
