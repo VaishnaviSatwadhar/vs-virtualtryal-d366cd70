@@ -12,8 +12,17 @@ serve(async (req) => {
 
   try {
     console.log("Virtual try-on request received");
-    const { userImage, clothingImage, clothingName, backgroundType = "original", view = "front", size = "M" } = await req.json();
-    console.log("Request data parsed successfully", { clothingName, backgroundType, view, size });
+    const { userImage, clothingImage, clothingName, clothingImages, clothingNames, backgroundType = "original", view = "front", size = "M" } = await req.json();
+
+    // Normalize to arrays (support legacy single-item callers)
+    const imagesArr: string[] = Array.isArray(clothingImages) && clothingImages.length > 0
+      ? clothingImages
+      : (clothingImage ? [clothingImage] : []);
+    const namesArr: string[] = Array.isArray(clothingNames) && clothingNames.length > 0
+      ? clothingNames
+      : (clothingName ? [clothingName] : []);
+
+    console.log("Request data parsed", { itemCount: imagesArr.length, names: namesArr, backgroundType, view, size });
     
     // Input validation
     if (!userImage || typeof userImage !== 'string' || userImage.length > 1000000) {
@@ -23,18 +32,19 @@ serve(async (req) => {
       );
     }
 
-    if (!clothingImage || typeof clothingImage !== 'string' || clothingImage.length > 1000000) {
+    if (imagesArr.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Invalid clothing image data" }),
+        JSON.stringify({ error: "No clothing item provided" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    if (clothingName && (typeof clothingName !== 'string' || clothingName.length > 200)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid clothing name" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    for (const img of imagesArr) {
+      if (!img || typeof img !== "string" || img.length > 1000000) {
+        return new Response(
+          JSON.stringify({ error: "Invalid clothing image data" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -73,7 +83,11 @@ serve(async (req) => {
     const sizeKey = (typeof size === "string" ? size.toUpperCase() : "M");
     const sizeInstruction = sizeMap[sizeKey] || sizeMap.M;
 
-    const prompt = `Virtual try-on: Fit the ${clothingName || 'item'} from image 2 onto the person in image 1. Match body proportions, skin tone, and lighting. Render the garment at SIZE ${sizeKey} — ${sizeInstruction}. Each size up should look progressively looser/larger; each size down progressively tighter/smaller. ${viewInstruction} ${bgInstruction}. Keep the same person identity, hair, and skin. If no person visible, respond "ERROR: No person detected". Output photorealistic result.`;
+    const itemList = namesArr.length > 0
+      ? namesArr.map((n, i) => `(${i + 2}) ${n}`).join(", ")
+      : "the items in the following images";
+    const multi = imagesArr.length > 1;
+    const prompt = `Virtual try-on: Image 1 is the person. The next ${imagesArr.length} image${multi ? "s are" : " is"} clothing/accessory item${multi ? "s" : ""}: ${itemList}. ${multi ? "Layer ALL of these items together onto the same person in a single photo, combining them naturally (e.g. shirt + pants + accessories worn at the same time). Respect realistic garment layering order." : "Fit this item onto the person."} Match body proportions, skin tone, and lighting. Render clothing at SIZE ${sizeKey} — ${sizeInstruction}. Each size up should look progressively looser/larger; each size down progressively tighter/smaller. ${viewInstruction} ${bgInstruction}. Keep the same person identity, hair, and skin. If no person visible, respond "ERROR: No person detected". Output a single photorealistic result image with all selected items worn together.`;
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -89,7 +103,7 @@ serve(async (req) => {
             content: [
               { type: "text", text: prompt },
               { type: "image_url", image_url: { url: userImage } },
-              { type: "image_url", image_url: { url: clothingImage } }
+              ...imagesArr.map((url) => ({ type: "image_url" as const, image_url: { url } })),
             ]
           }
         ],

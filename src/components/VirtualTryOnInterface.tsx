@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useWishlist } from "@/hooks/useWishlist";
 
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
@@ -59,8 +60,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const [activeResultView, setActiveResultView] = useState<"front" | "back" | "side">("front");
   const [generatingView, setGeneratingView] = useState<"front" | "back" | "side" | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [myProducts, setMyProducts] = useState<Product[]>([]); // User's selected products
-  const [showGallery, setShowGallery] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [backgroundType, setBackgroundType] = useState<string>("original");
   
   const [selectedSize, setSelectedSize] = useState<string>("M");
@@ -82,6 +82,16 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const { wishlistItems, loading: wishlistLoading } = useWishlist();
+
+  // Build product list from user's wishlist
+  const wishlistProducts: Product[] = wishlistItems.map((w) => ({
+    name: w.product_name,
+    image: w.product_image,
+    brand: w.category || "Wishlist",
+    price: 0,
+  }));
 
   // All available products for try-on
   const products: Product[] = [
@@ -119,37 +129,30 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         brand: "Gallery Item",
         price: 0
       };
-      // Add to user's products if not already there
-      setMyProducts(prev => {
-        const exists = prev.some(p => p.name === product.name);
-        if (!exists) {
-          return [...prev, product];
-        }
-        return prev;
-      });
+      setSelectedProducts((prev) =>
+        prev.some((p) => p.name === product.name) ? prev : [...prev, product]
+      );
       setSelectedProduct(product);
       setTryonResult(null);
-      toast.success(`${selectedProductProp.name} added to your selection!`);
+      toast.success(`${selectedProductProp.name} added to your try-on!`);
     }
   }, [selectedProductProp]);
 
-  const addProductToMyList = (product: Product) => {
-    const exists = myProducts.some(p => p.name === product.name);
-    if (exists) {
-      toast.info(`${product.name} is already in your selection`);
-      return;
-    }
-    setMyProducts(prev => [...prev, product]);
-    toast.success(`${product.name} added to your selection!`);
-  };
-
-  const removeProductFromMyList = (productName: string) => {
-    setMyProducts(prev => prev.filter(p => p.name !== productName));
-    if (selectedProduct?.name === productName) {
-      setSelectedProduct(null);
-      setTryonResult(null);
-    }
-    toast.success(`Product removed from your selection`);
+  const toggleProductSelection = (product: Product) => {
+    setSelectedProducts((prev) => {
+      const exists = prev.some((p) => p.name === product.name);
+      if (exists) {
+        const next = prev.filter((p) => p.name !== product.name);
+        if (selectedProduct?.name === product.name) {
+          setSelectedProduct(next[0] || null);
+        }
+        return next;
+      }
+      setSelectedProduct(product);
+      return [...prev, product];
+    });
+    setResultViews({ front: null, back: null, side: null });
+    setTryonResult(null);
   };
 
   const attachStreamToVideo = useCallback((stream: MediaStream, label?: string) => {
@@ -398,32 +401,36 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   };
 
   const processVirtualTryOn = async () => {
-    if (!userImage || !selectedProduct) {
-      toast.error("Please upload/capture your photo and select a clothing item!");
+    if (!userImage || selectedProducts.length === 0) {
+      toast.error("Please upload/capture your photo and select at least one item!");
       return;
     }
 
     setIsProcessing(true);
-    toast.info("🎨 AI is creating your virtual try-on...", { duration: 5000 });
+    toast.info(`🎨 AI is fitting ${selectedProducts.length} item${selectedProducts.length > 1 ? "s" : ""} on you...`, { duration: 5000 });
 
     try {
-      // Convert product image to base64 if it's a module import
-      let clothingImageData = selectedProduct.image;
-      if (typeof selectedProduct.image === 'string' && !selectedProduct.image.startsWith('data:')) {
-        const response = await fetch(selectedProduct.image);
-        const blob = await response.blob();
-        clothingImageData = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      }
+      const clothingImages = await Promise.all(
+        selectedProducts.map(async (p) => {
+          if (typeof p.image === "string" && p.image.startsWith("data:")) return p.image;
+          const r = await fetch(p.image);
+          const b = await r.blob();
+          return await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(b);
+          });
+        })
+      );
+      const clothingNames = selectedProducts.map((p) => p.name);
 
       const { data, error } = await supabase.functions.invoke('virtual-tryon', {
         body: {
           userImage,
-          clothingImage: clothingImageData,
-          clothingName: selectedProduct.name,
+          clothingImage: clothingImages[0],
+          clothingName: clothingNames.join(", "),
+          clothingImages,
+          clothingNames,
           backgroundType,
           size: selectedSize,
         }
@@ -473,7 +480,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   };
 
   const generateView = useCallback(async (view: "front" | "back" | "side") => {
-    if (!userImage || !selectedProduct) return;
+    if (!userImage || selectedProducts.length === 0) return;
     if (resultViews[view]) {
       setActiveResultView(view);
       return;
@@ -481,21 +488,26 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     setGeneratingView(view);
     setActiveResultView(view);
     try {
-      let clothingImageData = selectedProduct.image;
-      if (typeof selectedProduct.image === 'string' && !selectedProduct.image.startsWith('data:')) {
-        const response = await fetch(selectedProduct.image);
-        const blob = await response.blob();
-        clothingImageData = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      }
+      const clothingImages = await Promise.all(
+        selectedProducts.map(async (p) => {
+          if (typeof p.image === "string" && p.image.startsWith("data:")) return p.image;
+          const r = await fetch(p.image);
+          const b = await r.blob();
+          return await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(b);
+          });
+        })
+      );
+      const clothingNames = selectedProducts.map((p) => p.name);
       const { data, error } = await supabase.functions.invoke('virtual-tryon', {
         body: {
           userImage,
-          clothingImage: clothingImageData,
-          clothingName: selectedProduct.name,
+          clothingImage: clothingImages[0],
+          clothingName: clothingNames.join(", "),
+          clothingImages,
+          clothingNames,
           backgroundType,
           view,
           size: selectedSize,
@@ -514,7 +526,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     } finally {
       setGeneratingView(null);
     }
-  }, [userImage, selectedProduct, backgroundType, resultViews, selectedSize]);
+  }, [userImage, selectedProducts, backgroundType, resultViews, selectedSize]);
 
   const cycleView = (dir: 1 | -1) => {
     const order: Array<"front" | "side" | "back"> = ["front", "side", "back"];
@@ -536,7 +548,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().split('T')[0];
-    link.download = `tryon_${selectedProduct?.name.replace(/\s+/g, '_')}_${activeResultView}_${timestamp}.png`;
+    const fileLabel = (selectedProducts[0]?.name || "tryon").replace(/\s+/g, '_');
+    link.download = `tryon_${fileLabel}_${activeResultView}_${timestamp}.png`;
     link.href = current;
     link.click();
     toast.success("Image downloaded!");
@@ -807,111 +820,66 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-                <h3 className="text-xl font-semibold">My Products</h3>
+                <h3 className="text-xl font-semibold">My Wishlist</h3>
               </div>
-              <Button
-                onClick={() => setShowGallery(!showGallery)}
-                variant={showGallery ? "default" : "outline"}
-                size="sm"
-              >
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                {showGallery ? 'Hide Gallery' : 'Browse Gallery'}
-              </Button>
+              {selectedProducts.length > 0 && (
+                <Badge variant="secondary">{selectedProducts.length} selected</Badge>
+              )}
             </div>
-            
-            {/* Gallery View */}
-            {showGallery && (
-              <div className="mb-4 p-4 border rounded-lg bg-muted/20">
-                <h4 className="text-sm font-semibold mb-3">Product Gallery</h4>
-                <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
-                  {products.map((product) => {
-                    const isAdded = myProducts.some(p => p.name === product.name);
-                    return (
-                      <div
-                        key={product.name}
-                        className="relative p-2 rounded-lg border bg-background"
-                      >
-                        <img 
-                          src={product.image} 
-                          alt={product.name}
-                          className="w-full h-24 object-cover rounded-md mb-2"
-                        />
-                        <p className="text-xs font-medium truncate">{product.name}</p>
-                        <p className="text-xs text-muted-foreground mb-2">₹{product.price}</p>
-                        <Button
-                          onClick={() => addProductToMyList(product)}
-                          disabled={isAdded}
-                          size="sm"
-                          className="w-full"
-                          variant={isAdded ? "outline" : "default"}
-                        >
-                          {isAdded ? (
-                            <>Added</>
-                          ) : (
-                            <><Plus className="h-3 w-3 mr-1" /> Add</>
-                          )}
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
-            {/* User's Selected Products */}
+            <p className="text-xs text-muted-foreground mb-3">
+              Tap items to layer them on your photo (e.g. shirt + jeans + accessories).
+            </p>
+
+            {/* Wishlist products — tap to toggle */}
             <div className="space-y-4">
-              {myProducts.length === 0 ? (
+              {wishlistLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin" />
+                  <p className="text-sm">Loading your wishlist…</p>
+                </div>
+              ) : wishlistProducts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <ShoppingBag className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No products selected yet</p>
-                  <p className="text-xs mt-1">Click "Browse Gallery" to add products</p>
+                  <p className="text-sm">Your wishlist is empty</p>
+                  <p className="text-xs mt-1">Add items from the Product Gallery below to try them on here.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
-                  {myProducts.map((product) => (
-                    <div
-                      key={product.name}
-                      className={`relative p-2 rounded-lg border-2 transition-all cursor-pointer ${
-                        selectedProduct?.name === product.name
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-muted hover:border-primary/50'
-                      }`}
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setTryonResult(null);
-                        toast.success(`Selected: ${product.name}`);
-                      }}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeProductFromMyList(product.name);
-                        }}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center hover:bg-destructive/80 z-10"
+                  {wishlistProducts.map((product) => {
+                    const isSelected = selectedProducts.some((p) => p.name === product.name);
+                    return (
+                      <div
+                        key={product.name}
+                        className={`relative p-2 rounded-lg border-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-primary ring-2 ring-primary/20"
+                            : "border-muted hover:border-primary/50"
+                        }`}
+                        onClick={() => toggleProductSelection(product)}
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
-                        className="w-full h-32 object-cover rounded-md mb-2"
-                      />
-                      <p className="text-sm font-medium truncate">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">₹{product.price}</p>
-                      {selectedProduct?.name === product.name && (
-                        <Badge className="mt-1 w-full justify-center" variant="default">
-                          Selected
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-32 object-cover rounded-md mb-2"
+                        />
+                        <p className="text-sm font-medium truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{product.brand}</p>
+                        {isSelected && (
+                          <Badge className="mt-1 w-full justify-center" variant="default">
+                            Selected
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             <div className="space-y-4 mt-4">
               {/* Size Selector */}
-              {selectedProduct && (
+              {selectedProducts.length > 0 && (
                 <div className="p-3 bg-muted/30 rounded-lg space-y-4 border border-border/50">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -1003,7 +971,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
               <Button
                 onClick={processVirtualTryOn}
-                disabled={isProcessing || !selectedProduct || !userImage}
+                disabled={isProcessing || selectedProducts.length === 0 || !userImage}
                 className="w-full"
                 size="lg"
               >
