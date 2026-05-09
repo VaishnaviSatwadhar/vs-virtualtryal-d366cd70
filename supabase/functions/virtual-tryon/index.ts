@@ -12,8 +12,8 @@ serve(async (req) => {
 
   try {
     console.log("Virtual try-on request received");
-    const { userImage, clothingImage, clothingName, backgroundType = "original", view = "front" } = await req.json();
-    console.log("Request data parsed successfully", { clothingName, backgroundType, view });
+    const { userImage, clothingImage, clothingName, backgroundType = "original", view = "front", size = "M" } = await req.json();
+    console.log("Request data parsed successfully", { clothingName, backgroundType, view, size });
     
     // Input validation
     if (!userImage || typeof userImage !== 'string' || userImage.length > 1000000) {
@@ -62,7 +62,18 @@ serve(async (req) => {
         ? "Show the BACK view of the same person (rotated 180°), same body, pose mirrored facing away. Show how the garment looks from behind."
         : "Show the SIDE PROFILE view (90° rotation) of the same person wearing the garment.";
 
-    const prompt = `Virtual try-on: Fit the ${clothingName || 'item'} from image 2 onto the person in image 1. Match body proportions, skin tone, and lighting. ${viewInstruction} ${bgInstruction}. Keep the same person identity, hair, and skin. If no person visible, respond "ERROR: No person detected". Output photorealistic result.`;
+    const sizeMap: Record<string, string> = {
+      XS: "extra-small / very tight fitted look, garment hugs the body closely with minimal fabric excess",
+      S: "small / snug fitted look, slightly tight against the body",
+      M: "medium / standard regular fit, true to body proportions",
+      L: "large / slightly loose fit with a bit of extra fabric room",
+      XL: "extra-large / clearly loose and roomy fit, noticeably larger than the body",
+      XXL: "double extra-large / very oversized, baggy and draping fit",
+    };
+    const sizeKey = (typeof size === "string" ? size.toUpperCase() : "M");
+    const sizeInstruction = sizeMap[sizeKey] || sizeMap.M;
+
+    const prompt = `Virtual try-on: Fit the ${clothingName || 'item'} from image 2 onto the person in image 1. Match body proportions, skin tone, and lighting. Render the garment at SIZE ${sizeKey} — ${sizeInstruction}. Each size up should look progressively looser/larger; each size down progressively tighter/smaller. ${viewInstruction} ${bgInstruction}. Keep the same person identity, hair, and skin. If no person visible, respond "ERROR: No person detected". Output photorealistic result.`;
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
