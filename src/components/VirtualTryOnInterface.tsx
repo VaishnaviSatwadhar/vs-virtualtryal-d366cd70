@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useWishlist } from "@/hooks/useWishlist";
 
 // Import product images
 import blackTshirt from "@/assets/products/black-tshirt.jpg";
@@ -59,8 +60,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const [activeResultView, setActiveResultView] = useState<"front" | "back" | "side">("front");
   const [generatingView, setGeneratingView] = useState<"front" | "back" | "side" | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [myProducts, setMyProducts] = useState<Product[]>([]); // User's selected products
-  const [showGallery, setShowGallery] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [backgroundType, setBackgroundType] = useState<string>("original");
   
   const [selectedSize, setSelectedSize] = useState<string>("M");
@@ -82,6 +82,16 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const { wishlistItems, loading: wishlistLoading } = useWishlist();
+
+  // Build product list from user's wishlist
+  const wishlistProducts: Product[] = wishlistItems.map((w) => ({
+    name: w.product_name,
+    image: w.product_image,
+    brand: w.category || "Wishlist",
+    price: 0,
+  }));
 
   // All available products for try-on
   const products: Product[] = [
@@ -119,37 +129,30 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         brand: "Gallery Item",
         price: 0
       };
-      // Add to user's products if not already there
-      setMyProducts(prev => {
-        const exists = prev.some(p => p.name === product.name);
-        if (!exists) {
-          return [...prev, product];
-        }
-        return prev;
-      });
+      setSelectedProducts((prev) =>
+        prev.some((p) => p.name === product.name) ? prev : [...prev, product]
+      );
       setSelectedProduct(product);
       setTryonResult(null);
-      toast.success(`${selectedProductProp.name} added to your selection!`);
+      toast.success(`${selectedProductProp.name} added to your try-on!`);
     }
   }, [selectedProductProp]);
 
-  const addProductToMyList = (product: Product) => {
-    const exists = myProducts.some(p => p.name === product.name);
-    if (exists) {
-      toast.info(`${product.name} is already in your selection`);
-      return;
-    }
-    setMyProducts(prev => [...prev, product]);
-    toast.success(`${product.name} added to your selection!`);
-  };
-
-  const removeProductFromMyList = (productName: string) => {
-    setMyProducts(prev => prev.filter(p => p.name !== productName));
-    if (selectedProduct?.name === productName) {
-      setSelectedProduct(null);
-      setTryonResult(null);
-    }
-    toast.success(`Product removed from your selection`);
+  const toggleProductSelection = (product: Product) => {
+    setSelectedProducts((prev) => {
+      const exists = prev.some((p) => p.name === product.name);
+      if (exists) {
+        const next = prev.filter((p) => p.name !== product.name);
+        if (selectedProduct?.name === product.name) {
+          setSelectedProduct(next[0] || null);
+        }
+        return next;
+      }
+      setSelectedProduct(product);
+      return [...prev, product];
+    });
+    setResultViews({ front: null, back: null, side: null });
+    setTryonResult(null);
   };
 
   const attachStreamToVideo = useCallback((stream: MediaStream, label?: string) => {
