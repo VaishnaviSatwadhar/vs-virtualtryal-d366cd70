@@ -3,9 +3,10 @@ import { Camera, Upload, Download, Sparkles, Loader2, Link as LinkIcon, Plus, X,
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Slider } from "./ui/slider";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -62,7 +63,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   const [showGallery, setShowGallery] = useState(false);
   const [backgroundType, setBackgroundType] = useState<string>("original");
   
-  const [productFit, setProductFit] = useState<number[]>([50]);
+  const [selectedSize, setSelectedSize] = useState<string>("M");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -423,7 +424,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
           userImage,
           clothingImage: clothingImageData,
           clothingName: selectedProduct.name,
-          backgroundType
+          backgroundType,
+          size: selectedSize,
         }
       });
 
@@ -496,6 +498,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
           clothingName: selectedProduct.name,
           backgroundType,
           view,
+          size: selectedSize,
         }
       });
       if (error) throw error;
@@ -511,7 +514,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     } finally {
       setGeneratingView(null);
     }
-  }, [userImage, selectedProduct, backgroundType, resultViews]);
+  }, [userImage, selectedProduct, backgroundType, resultViews, selectedSize]);
 
   const cycleView = (dir: 1 | -1) => {
     const order: Array<"front" | "side" | "back"> = ["front", "side", "back"];
