@@ -910,32 +910,80 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <div className="space-y-4 mt-4">
-              {/* Fit Slider */}
+              {/* Size Selector */}
               {selectedProduct && (
                 <div className="p-3 bg-muted/30 rounded-lg space-y-4 border border-border/50">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Ruler className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold">Fit</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-muted-foreground">Fit</label>
-                      <span className="text-xs font-medium text-primary">
-                        {productFit[0] <= 25 ? 'Slim' : productFit[0] <= 50 ? 'Regular' : productFit[0] <= 75 ? 'Relaxed' : 'Oversized'}
-                      </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Ruler className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold">Size</span>
                     </div>
-                    <Slider
-                      value={productFit}
-                      onValueChange={setProductFit}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground">
-                      <span>Slim</span><span>Regular</span><span>Relaxed</span><span>Oversized</span>
-                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="text-xs font-medium text-primary hover:underline">
+                          Size Chart
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Size Chart (in inches)</DialogTitle>
+                        </DialogHeader>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Size</TableHead>
+                              <TableHead>Chest</TableHead>
+                              <TableHead>Waist</TableHead>
+                              <TableHead>Length</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {[
+                              { s: "XS", c: "34", w: "28", l: "26" },
+                              { s: "S", c: "36", w: "30", l: "27" },
+                              { s: "M", c: "38", w: "32", l: "28" },
+                              { s: "L", c: "40", w: "34", l: "29" },
+                              { s: "XL", c: "42", w: "36", l: "30" },
+                              { s: "XXL", c: "44", w: "38", l: "31" },
+                            ].map((r) => (
+                              <TableRow key={r.s}>
+                                <TableCell className="font-medium">{r.s}</TableCell>
+                                <TableCell>{r.c}</TableCell>
+                                <TableCell>{r.w}</TableCell>
+                                <TableCell>{r.l}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Sizes are progressive: each step up adds roughly 2" of chest width and looser fit.
+                        </p>
+                      </DialogContent>
+                    </Dialog>
                   </div>
+                  <div className="grid grid-cols-6 gap-2">
+                    {["XS", "S", "M", "L", "XL", "XXL"].map((sz) => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize(sz);
+                          setResultViews({ front: null, back: null, side: null });
+                          setTryonResult(null);
+                        }}
+                        className={`px-2 py-2 text-xs font-semibold rounded-md border transition-colors ${
+                          selectedSize === sz
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Selected size affects how loose or tight the garment appears in the result.
+                  </p>
                 </div>
               )}
               <div className="space-y-2">
