@@ -401,32 +401,36 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   };
 
   const processVirtualTryOn = async () => {
-    if (!userImage || !selectedProduct) {
-      toast.error("Please upload/capture your photo and select a clothing item!");
+    if (!userImage || selectedProducts.length === 0) {
+      toast.error("Please upload/capture your photo and select at least one item!");
       return;
     }
 
     setIsProcessing(true);
-    toast.info("🎨 AI is creating your virtual try-on...", { duration: 5000 });
+    toast.info(`🎨 AI is fitting ${selectedProducts.length} item${selectedProducts.length > 1 ? "s" : ""} on you...`, { duration: 5000 });
 
     try {
-      // Convert product image to base64 if it's a module import
-      let clothingImageData = selectedProduct.image;
-      if (typeof selectedProduct.image === 'string' && !selectedProduct.image.startsWith('data:')) {
-        const response = await fetch(selectedProduct.image);
-        const blob = await response.blob();
-        clothingImageData = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      }
+      const clothingImages = await Promise.all(
+        selectedProducts.map(async (p) => {
+          if (typeof p.image === "string" && p.image.startsWith("data:")) return p.image;
+          const r = await fetch(p.image);
+          const b = await r.blob();
+          return await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(b);
+          });
+        })
+      );
+      const clothingNames = selectedProducts.map((p) => p.name);
 
       const { data, error } = await supabase.functions.invoke('virtual-tryon', {
         body: {
           userImage,
-          clothingImage: clothingImageData,
-          clothingName: selectedProduct.name,
+          clothingImage: clothingImages[0],
+          clothingName: clothingNames.join(", "),
+          clothingImages,
+          clothingNames,
           backgroundType,
           size: selectedSize,
         }
@@ -476,7 +480,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
   };
 
   const generateView = useCallback(async (view: "front" | "back" | "side") => {
-    if (!userImage || !selectedProduct) return;
+    if (!userImage || selectedProducts.length === 0) return;
     if (resultViews[view]) {
       setActiveResultView(view);
       return;
@@ -484,21 +488,26 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     setGeneratingView(view);
     setActiveResultView(view);
     try {
-      let clothingImageData = selectedProduct.image;
-      if (typeof selectedProduct.image === 'string' && !selectedProduct.image.startsWith('data:')) {
-        const response = await fetch(selectedProduct.image);
-        const blob = await response.blob();
-        clothingImageData = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      }
+      const clothingImages = await Promise.all(
+        selectedProducts.map(async (p) => {
+          if (typeof p.image === "string" && p.image.startsWith("data:")) return p.image;
+          const r = await fetch(p.image);
+          const b = await r.blob();
+          return await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(b);
+          });
+        })
+      );
+      const clothingNames = selectedProducts.map((p) => p.name);
       const { data, error } = await supabase.functions.invoke('virtual-tryon', {
         body: {
           userImage,
-          clothingImage: clothingImageData,
-          clothingName: selectedProduct.name,
+          clothingImage: clothingImages[0],
+          clothingName: clothingNames.join(", "),
+          clothingImages,
+          clothingNames,
           backgroundType,
           view,
           size: selectedSize,
@@ -517,7 +526,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
     } finally {
       setGeneratingView(null);
     }
-  }, [userImage, selectedProduct, backgroundType, resultViews, selectedSize]);
+  }, [userImage, selectedProducts, backgroundType, resultViews, selectedSize]);
 
   const cycleView = (dir: 1 | -1) => {
     const order: Array<"front" | "side" | "back"> = ["front", "side", "back"];
@@ -539,7 +548,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().split('T')[0];
-    link.download = `tryon_${selectedProduct?.name.replace(/\s+/g, '_')}_${activeResultView}_${timestamp}.png`;
+    const fileLabel = (selectedProducts[0]?.name || "tryon").replace(/\s+/g, '_');
+    link.download = `tryon_${fileLabel}_${activeResultView}_${timestamp}.png`;
     link.href = current;
     link.click();
     toast.success("Image downloaded!");
@@ -869,7 +879,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
             <div className="space-y-4 mt-4">
               {/* Size Selector */}
-              {selectedProduct && (
+              {selectedProducts.length > 0 && (
                 <div className="p-3 bg-muted/30 rounded-lg space-y-4 border border-border/50">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -961,7 +971,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
               <Button
                 onClick={processVirtualTryOn}
-                disabled={isProcessing || !selectedProduct || !userImage}
+                disabled={isProcessing || selectedProducts.length === 0 || !userImage}
                 className="w-full"
                 size="lg"
               >
