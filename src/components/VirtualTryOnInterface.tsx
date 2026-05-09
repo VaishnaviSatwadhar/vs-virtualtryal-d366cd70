@@ -810,104 +810,59 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-                <h3 className="text-xl font-semibold">My Products</h3>
+                <h3 className="text-xl font-semibold">My Wishlist</h3>
               </div>
-              <Button
-                onClick={() => setShowGallery(!showGallery)}
-                variant={showGallery ? "default" : "outline"}
-                size="sm"
-              >
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                {showGallery ? 'Hide Gallery' : 'Browse Gallery'}
-              </Button>
+              {selectedProducts.length > 0 && (
+                <Badge variant="secondary">{selectedProducts.length} selected</Badge>
+              )}
             </div>
-            
-            {/* Gallery View */}
-            {showGallery && (
-              <div className="mb-4 p-4 border rounded-lg bg-muted/20">
-                <h4 className="text-sm font-semibold mb-3">Product Gallery</h4>
-                <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
-                  {products.map((product) => {
-                    const isAdded = myProducts.some(p => p.name === product.name);
-                    return (
-                      <div
-                        key={product.name}
-                        className="relative p-2 rounded-lg border bg-background"
-                      >
-                        <img 
-                          src={product.image} 
-                          alt={product.name}
-                          className="w-full h-24 object-cover rounded-md mb-2"
-                        />
-                        <p className="text-xs font-medium truncate">{product.name}</p>
-                        <p className="text-xs text-muted-foreground mb-2">₹{product.price}</p>
-                        <Button
-                          onClick={() => addProductToMyList(product)}
-                          disabled={isAdded}
-                          size="sm"
-                          className="w-full"
-                          variant={isAdded ? "outline" : "default"}
-                        >
-                          {isAdded ? (
-                            <>Added</>
-                          ) : (
-                            <><Plus className="h-3 w-3 mr-1" /> Add</>
-                          )}
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
-            {/* User's Selected Products */}
+            <p className="text-xs text-muted-foreground mb-3">
+              Tap items to layer them on your photo (e.g. shirt + jeans + accessories).
+            </p>
+
+            {/* Wishlist products — tap to toggle */}
             <div className="space-y-4">
-              {myProducts.length === 0 ? (
+              {wishlistLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin" />
+                  <p className="text-sm">Loading your wishlist…</p>
+                </div>
+              ) : wishlistProducts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <ShoppingBag className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No products selected yet</p>
-                  <p className="text-xs mt-1">Click "Browse Gallery" to add products</p>
+                  <p className="text-sm">Your wishlist is empty</p>
+                  <p className="text-xs mt-1">Add items from the Product Gallery below to try them on here.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
-                  {myProducts.map((product) => (
-                    <div
-                      key={product.name}
-                      className={`relative p-2 rounded-lg border-2 transition-all cursor-pointer ${
-                        selectedProduct?.name === product.name
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-muted hover:border-primary/50'
-                      }`}
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setTryonResult(null);
-                        toast.success(`Selected: ${product.name}`);
-                      }}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeProductFromMyList(product.name);
-                        }}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center hover:bg-destructive/80 z-10"
+                  {wishlistProducts.map((product) => {
+                    const isSelected = selectedProducts.some((p) => p.name === product.name);
+                    return (
+                      <div
+                        key={product.name}
+                        className={`relative p-2 rounded-lg border-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-primary ring-2 ring-primary/20"
+                            : "border-muted hover:border-primary/50"
+                        }`}
+                        onClick={() => toggleProductSelection(product)}
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
-                        className="w-full h-32 object-cover rounded-md mb-2"
-                      />
-                      <p className="text-sm font-medium truncate">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">₹{product.price}</p>
-                      {selectedProduct?.name === product.name && (
-                        <Badge className="mt-1 w-full justify-center" variant="default">
-                          Selected
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-32 object-cover rounded-md mb-2"
+                        />
+                        <p className="text-sm font-medium truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{product.brand}</p>
+                        {isSelected && (
+                          <Badge className="mt-1 w-full justify-center" variant="default">
+                            Selected
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
