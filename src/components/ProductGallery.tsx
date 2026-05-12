@@ -44,6 +44,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 
+// Module-level cache so color/view variants are reused across renders/products
+// Key: `${productId}|${color}|${view}` → resolved image URL
+const variantCache = new Map<string, string>();
+const inflight = new Map<string, Promise<string>>();
+
+async function fetchVariant(
+  productId: string,
+  productName: string,
+  imageUrl: string,
+  color: string,
+  view: "front" | "back" | "side" = "front",
+): Promise<string> {
+  const key = `${productId}|${color}|${view}`;
+  const cached = variantCache.get(key);
+  if (cached) return cached;
+  const pending = inflight.get(key);
+  if (pending) return pending;
+  const p = (async () => {
+    const absUrl = new URL(imageUrl, window.location.origin).href;
+    const { data, error } = await supabase.functions.invoke("recolor-product", {
+      body: { productId, productName, imageUrl: absUrl, color, view },
+    });
+    if (error || !data?.url) throw new Error(error?.message || data?.error || "Recolor failed");
+    variantCache.set(key, data.url);
+    return data.url as string;
+  })();
+  inflight.set(key, p);
+  try { return await p; } finally { inflight.delete(key); }
+}
+
 // Map common hex colors to human-readable names for accessibility & display
 const COLOR_NAMES: Record<string, string> = {
   "#000000": "Black",
@@ -1118,12 +1148,42 @@ const ProductCard = ({
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]);
   const selectedIndex = product.colors.indexOf(selectedColor);
   const colorName = COLOR_NAMES[selectedColor.toUpperCase()] ?? selectedColor;
-  const [variantUrl, setVariantUrl] = useState<string>(product.image);
+  const initialKey = `${product.id}|${selectedColor}|front`;
+  const [variantUrl, setVariantUrl] = useState<string>(
+    selectedIndex === 0 ? product.image : (variantCache.get(initialKey) ?? product.image),
+  );
   const [isRecoloring, setIsRecoloring] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [activeView, setActiveView] = useState<"front" | "back" | "side">("front");
   const [viewUrls, setViewUrls] = useState<Record<string, string>>({});
   const [viewLoading, setViewLoading] = useState(false);
+
+  // Seed cache for the default color (front) so it's instantly reusable
+  useEffect(() => {
+    const k = `${product.id}|${product.colors[0]}|front`;
+    if (!variantCache.has(k)) variantCache.set(k, product.image);
+  }, [product.id, product.image, product.colors]);
+
+  // Prefetch all other color variants in the background — first time only.
+  // Subsequent visits hit the storage cache server-side and our memory cache here.
+  useEffect(() => {
+    let cancelled = false;
+    const prefetch = async () => {
+      for (let i = 1; i < product.colors.length; i++) {
+        if (cancelled) return;
+        const c = product.colors[i];
+        const k = `${product.id}|${c}|front`;
+        if (variantCache.has(k)) continue;
+        try {
+          await fetchVariant(product.id, product.name, product.image, c, "front");
+        } catch (e) {
+          // Silent — user can retry by clicking the swatch
+        }
+      }
+    };
+    prefetch();
+    return () => { cancelled = true; };
+  }, [product.id, product.name, product.image, product.colors]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1131,20 +1191,19 @@ const ProductCard = ({
       setVariantUrl(product.image);
       return;
     }
+    const k = `${product.id}|${selectedColor}|front`;
+    const cached = variantCache.get(k);
+    if (cached) {
+      setVariantUrl(cached);
+      setIsRecoloring(false);
+      return;
+    }
     setIsRecoloring(true);
-    const absUrl = new URL(product.image, window.location.origin).href;
-    supabase.functions
-      .invoke("recolor-product", {
-        body: { productId: product.id, productName: product.name, imageUrl: absUrl, color: selectedColor },
-      })
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error || !data?.url) {
-          console.error("Recolor failed:", error || data?.error);
-          setVariantUrl(product.image);
-        } else {
-          setVariantUrl(data.url);
-        }
+    fetchVariant(product.id, product.name, product.image, selectedColor, "front")
+      .then((url) => { if (!cancelled) setVariantUrl(url); })
+      .catch((err) => {
+        console.error("Recolor failed:", err);
+        if (!cancelled) setVariantUrl(product.image);
       })
       .finally(() => { if (!cancelled) setIsRecoloring(false); });
     return () => { cancelled = true; };
@@ -1168,27 +1227,20 @@ const ProductCard = ({
       return;
     }
 
+    const memKey = `${product.id}|${selectedColor}|${activeView}`;
+    const memHit = variantCache.get(memKey);
+    if (memHit) {
+      setViewUrls((p) => ({ ...p, [cacheK]: memHit }));
+      return;
+    }
+
     let cancelled = false;
     setViewLoading(true);
-    const absUrl = new URL(product.image, window.location.origin).href;
-    supabase.functions
-      .invoke("recolor-product", {
-        body: {
-          productId: product.id,
-          productName: product.name,
-          imageUrl: absUrl,
-          color: selectedColor,
-          view: activeView,
-        },
-      })
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error || !data?.url) {
-          console.error("View generation failed:", error || data?.error);
-          setViewUrls((p) => ({ ...p, [cacheK]: product.image }));
-        } else {
-          setViewUrls((p) => ({ ...p, [cacheK]: data.url }));
-        }
+    fetchVariant(product.id, product.name, product.image, selectedColor, activeView)
+      .then((url) => { if (!cancelled) setViewUrls((p) => ({ ...p, [cacheK]: url })); })
+      .catch((err) => {
+        console.error("View generation failed:", err);
+        if (!cancelled) setViewUrls((p) => ({ ...p, [cacheK]: product.image }));
       })
       .finally(() => { if (!cancelled) setViewLoading(false); });
     return () => { cancelled = true; };
