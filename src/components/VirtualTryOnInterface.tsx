@@ -889,7 +889,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-                <h3 className="text-xl font-semibold">My Wishlist</h3>
+                <h3 className="text-xl font-semibold">Selected Products</h3>
               </div>
               {selectedProducts.length > 0 && (
                 <Badge variant="secondary">{selectedProducts.length} selected</Badge>
@@ -897,7 +897,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Tap items to layer them on your photo (e.g. shirt + jeans + accessories).
+              Tap items to layer them on your photo (e.g. shirt + jeans + accessories). Pick a color to change the variant used for try-on.
             </p>
 
             {/* Wishlist products — tap to toggle */}
