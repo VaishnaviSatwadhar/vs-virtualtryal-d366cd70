@@ -38,7 +38,22 @@ interface Product {
   image: string;
   brand: string;
   price: number;
+  // Optional: when the user picks a swatch we override the image used for try-on
+  selectedColor?: string;
+  originalImage?: string;
 }
+
+// Default color palette shown for any product. Order matters — first is "original".
+const DEFAULT_PALETTE: { hex: string; name: string }[] = [
+  { hex: "__original", name: "Original" },
+  { hex: "#000000", name: "Black" },
+  { hex: "#FFFFFF", name: "White" },
+  { hex: "#1E3A8A", name: "Navy" },
+  { hex: "#DC2626", name: "Red" },
+  { hex: "#374151", name: "Charcoal" },
+  { hex: "#6B7280", name: "Gray" },
+  { hex: "#8B4513", name: "Brown" },
+];
 
 interface VirtualTryOnInterfaceProps {
   selectedProduct?: { name: string; image: string } | null;
