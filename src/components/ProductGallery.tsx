@@ -44,6 +44,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 
+// Module-level cache so color/view variants are reused across renders/products
+// Key: `${productId}|${color}|${view}` → resolved image URL
+const variantCache = new Map<string, string>();
+const inflight = new Map<string, Promise<string>>();
+
+async function fetchVariant(
+  productId: string,
+  productName: string,
+  imageUrl: string,
+  color: string,
+  view: "front" | "back" | "side" = "front",
+): Promise<string> {
+  const key = `${productId}|${color}|${view}`;
+  const cached = variantCache.get(key);
+  if (cached) return cached;
+  const pending = inflight.get(key);
+  if (pending) return pending;
+  const p = (async () => {
+    const absUrl = new URL(imageUrl, window.location.origin).href;
+    const { data, error } = await supabase.functions.invoke("recolor-product", {
+      body: { productId, productName, imageUrl: absUrl, color, view },
+    });
+    if (error || !data?.url) throw new Error(error?.message || data?.error || "Recolor failed");
+    variantCache.set(key, data.url);
+    return data.url as string;
+  })();
+  inflight.set(key, p);
+  try { return await p; } finally { inflight.delete(key); }
+}
+
 // Map common hex colors to human-readable names for accessibility & display
 const COLOR_NAMES: Record<string, string> = {
   "#000000": "Black",
