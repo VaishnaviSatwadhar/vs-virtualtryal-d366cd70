@@ -164,10 +164,64 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         return next;
       }
       setSelectedProduct(product);
-      return [...prev, product];
+      return [...prev, { ...product, originalImage: product.image }];
     });
     setResultViews({ front: null, back: null, side: null });
     setTryonResult(null);
+  };
+
+  // Recolor a selected product. Updates that product's image used for try-on.
+  const [recoloringName, setRecoloringName] = useState<string | null>(null);
+  const changeProductColor = async (productName: string, hex: string) => {
+    setSelectedProducts((prev) => {
+      const target = prev.find((p) => p.name === productName);
+      if (!target) return prev;
+      // "Original" → reset to original image
+      if (hex === "__original") {
+        return prev.map((p) =>
+          p.name === productName
+            ? { ...p, image: p.originalImage || p.image, selectedColor: undefined }
+            : p,
+        );
+      }
+      return prev;
+    });
+    if (hex === "__original") {
+      setResultViews({ front: null, back: null, side: null });
+      setTryonResult(null);
+      return;
+    }
+    const target = selectedProducts.find((p) => p.name === productName);
+    if (!target) return;
+    const sourceImage = target.originalImage || target.image;
+    setRecoloringName(productName);
+    try {
+      const absUrl = sourceImage.startsWith("data:")
+        ? sourceImage
+        : new URL(sourceImage, window.location.origin).href;
+      const { data, error } = await supabase.functions.invoke("recolor-product", {
+        body: {
+          productId: `tryon-${productName.toLowerCase().replace(/\s+/g, "-")}`,
+          productName,
+          imageUrl: absUrl,
+          color: hex,
+        },
+      });
+      if (error || !data?.url) throw new Error(error?.message || data?.error || "Recolor failed");
+      setSelectedProducts((prev) =>
+        prev.map((p) =>
+          p.name === productName ? { ...p, image: data.url, selectedColor: hex } : p,
+        ),
+      );
+      setResultViews({ front: null, back: null, side: null });
+      setTryonResult(null);
+      toast.success(`${productName} recolored — ready to try on`);
+    } catch (e: any) {
+      console.error("Recolor failed", e);
+      toast.error(`Could not recolor ${productName}. Please try another color.`);
+    } finally {
+      setRecoloringName(null);
+    }
   };
 
   const attachStreamToVideo = useCallback((stream: MediaStream, label?: string) => {
