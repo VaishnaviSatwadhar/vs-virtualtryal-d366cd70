@@ -38,7 +38,22 @@ interface Product {
   image: string;
   brand: string;
   price: number;
+  // Optional: when the user picks a swatch we override the image used for try-on
+  selectedColor?: string;
+  originalImage?: string;
 }
+
+// Default color palette shown for any product. Order matters — first is "original".
+const DEFAULT_PALETTE: { hex: string; name: string }[] = [
+  { hex: "__original", name: "Original" },
+  { hex: "#000000", name: "Black" },
+  { hex: "#FFFFFF", name: "White" },
+  { hex: "#1E3A8A", name: "Navy" },
+  { hex: "#DC2626", name: "Red" },
+  { hex: "#374151", name: "Charcoal" },
+  { hex: "#6B7280", name: "Gray" },
+  { hex: "#8B4513", name: "Brown" },
+];
 
 interface VirtualTryOnInterfaceProps {
   selectedProduct?: { name: string; image: string } | null;
@@ -149,10 +164,64 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
         return next;
       }
       setSelectedProduct(product);
-      return [...prev, product];
+      return [...prev, { ...product, originalImage: product.image }];
     });
     setResultViews({ front: null, back: null, side: null });
     setTryonResult(null);
+  };
+
+  // Recolor a selected product. Updates that product's image used for try-on.
+  const [recoloringName, setRecoloringName] = useState<string | null>(null);
+  const changeProductColor = async (productName: string, hex: string) => {
+    setSelectedProducts((prev) => {
+      const target = prev.find((p) => p.name === productName);
+      if (!target) return prev;
+      // "Original" → reset to original image
+      if (hex === "__original") {
+        return prev.map((p) =>
+          p.name === productName
+            ? { ...p, image: p.originalImage || p.image, selectedColor: undefined }
+            : p,
+        );
+      }
+      return prev;
+    });
+    if (hex === "__original") {
+      setResultViews({ front: null, back: null, side: null });
+      setTryonResult(null);
+      return;
+    }
+    const target = selectedProducts.find((p) => p.name === productName);
+    if (!target) return;
+    const sourceImage = target.originalImage || target.image;
+    setRecoloringName(productName);
+    try {
+      const absUrl = sourceImage.startsWith("data:")
+        ? sourceImage
+        : new URL(sourceImage, window.location.origin).href;
+      const { data, error } = await supabase.functions.invoke("recolor-product", {
+        body: {
+          productId: `tryon-${productName.toLowerCase().replace(/\s+/g, "-")}`,
+          productName,
+          imageUrl: absUrl,
+          color: hex,
+        },
+      });
+      if (error || !data?.url) throw new Error(error?.message || data?.error || "Recolor failed");
+      setSelectedProducts((prev) =>
+        prev.map((p) =>
+          p.name === productName ? { ...p, image: data.url, selectedColor: hex } : p,
+        ),
+      );
+      setResultViews({ front: null, back: null, side: null });
+      setTryonResult(null);
+      toast.success(`${productName} recolored — ready to try on`);
+    } catch (e: any) {
+      console.error("Recolor failed", e);
+      toast.error(`Could not recolor ${productName}. Please try another color.`);
+    } finally {
+      setRecoloringName(null);
+    }
   };
 
   const attachStreamToVideo = useCallback((stream: MediaStream, label?: string) => {
@@ -820,7 +889,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-                <h3 className="text-xl font-semibold">My Wishlist</h3>
+                <h3 className="text-xl font-semibold">Selected Products</h3>
               </div>
               {selectedProducts.length > 0 && (
                 <Badge variant="secondary">{selectedProducts.length} selected</Badge>
@@ -828,7 +897,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Tap items to layer them on your photo (e.g. shirt + jeans + accessories).
+              Tap items to layer them on your photo (e.g. shirt + jeans + accessories). Pick a color to change the variant used for try-on.
             </p>
 
             {/* Wishlist products — tap to toggle */}
@@ -878,6 +947,83 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <div className="space-y-4 mt-4">
+              {/* Selected items: details + color swatches */}
+              {selectedProducts.length > 0 && (
+                <div className="space-y-3">
+                  {selectedProducts.map((p) => (
+                    <div
+                      key={p.name}
+                      className="p-3 rounded-lg border border-border/60 bg-muted/20 flex gap-3"
+                    >
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="w-16 h-16 rounded-md object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate">{p.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{p.brand}</p>
+                            {p.price > 0 && (
+                              <p className="text-xs font-medium text-primary mt-0.5">
+                                ₹{p.price.toLocaleString("en-IN")}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => toggleProductSelection(p)}
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                            aria-label="Remove"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                            Color
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {DEFAULT_PALETTE.map((c) => {
+                              const isActive =
+                                (c.hex === "__original" && !p.selectedColor) ||
+                                p.selectedColor === c.hex;
+                              const busy = recoloringName === p.name;
+                              return (
+                                <button
+                                  key={c.hex}
+                                  disabled={busy}
+                                  onClick={() => changeProductColor(p.name, c.hex)}
+                                  title={c.name}
+                                  className={`relative h-6 w-6 rounded-full border-2 transition-all ${
+                                    isActive
+                                      ? "border-primary ring-2 ring-primary/30 scale-110"
+                                      : "border-border hover:border-primary/60"
+                                  } ${busy ? "opacity-60 cursor-wait" : ""}`}
+                                  style={
+                                    c.hex === "__original"
+                                      ? {
+                                          background:
+                                            "conic-gradient(from 180deg, #f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f87171)",
+                                        }
+                                      : { backgroundColor: c.hex }
+                                  }
+                                />
+                              );
+                            })}
+                          </div>
+                          {recoloringName === p.name && (
+                            <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                              <Loader2 className="h-3 w-3 animate-spin" /> Recoloring…
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Size Selector */}
               {selectedProducts.length > 0 && (
                 <div className="p-3 bg-muted/30 rounded-lg space-y-4 border border-border/50">

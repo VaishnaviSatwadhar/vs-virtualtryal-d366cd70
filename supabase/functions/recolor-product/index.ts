@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
         : viewKey === "back"
         ? "Generate the BACK view of the same product (rear side), as if the camera moved 180° around it. Maintain identical garment design, proportions, fabric, and studio lighting. Show seams, tags, or back details realistically."
         : "Generate the SIDE view (90° profile) of the same product. Maintain identical garment design, proportions, fabric, and studio lighting.";
-    const prompt = `Recolor ONLY the main clothing/product item to ${cName} (hex ${color}). ${viewInstruction} Keep the same fabric texture, lighting, shadows, and clean background. Photorealistic, high quality, e-commerce product shot.`;
+    const prompt = `Change ONLY the dominant color of the main product/garment in this image to ${cName} (hex ${color}). Apply the new color uniformly to all parts of the product that share its current main color, including sleeves, hood, collar, body, straps, bands, etc. Preserve EVERYTHING else exactly: the product's shape, silhouette, design, prints, logos, stitching, fabric texture, material finish, buttons, zippers, hardware, lighting, shadows, perspective, and the original background. Do NOT change the product type, do NOT add or remove elements, do NOT alter the pose or framing. ${viewInstruction} Output a clean photorealistic e-commerce product image.`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
