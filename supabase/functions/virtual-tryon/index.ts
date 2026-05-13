@@ -89,7 +89,7 @@ serve(async (req) => {
     const multi = imagesArr.length > 1;
     const prompt = `Virtual try-on: Image 1 is the person. The next ${imagesArr.length} image${multi ? "s are" : " is"} clothing/accessory item${multi ? "s" : ""}: ${itemList}. ${multi ? "Layer ALL of these items together onto the same person in a single photo, combining them naturally (e.g. shirt + pants + accessories worn at the same time). Respect realistic garment layering order." : "Fit this item onto the person."} Match body proportions, skin tone, and lighting. Render clothing at SIZE ${sizeKey} — ${sizeInstruction}. Each size up should look progressively looser/larger; each size down progressively tighter/smaller. ${viewInstruction} ${bgInstruction}. Keep the same person identity, hair, and skin. If no person visible, respond "ERROR: No person detected". Output a single photorealistic result image with all selected items worn together.`;
     
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const callAI = () => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -111,13 +111,24 @@ serve(async (req) => {
       }),
     });
 
+    // Retry on 429 with exponential backoff (free-tier rate limits are bursty)
+    let response = await callAI();
+    let attempts = 0;
+    while (response.status === 429 && attempts < 3) {
+      const wait = 1500 * Math.pow(2, attempts); // 1.5s, 3s, 6s
+      console.log(`Rate limited, retrying in ${wait}ms (attempt ${attempts + 1}/3)`);
+      await new Promise((r) => setTimeout(r, wait));
+      response = await callAI();
+      attempts++;
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error("AI API error:", response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Service is currently busy. Please try again shortly." }),
+          JSON.stringify({ error: "AI is busy right now (rate limited). Please wait ~30 seconds and try again." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
