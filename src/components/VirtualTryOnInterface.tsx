@@ -174,6 +174,28 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
   // Recolor a selected product. Updates that product's image used for try-on.
   const [recoloringName, setRecoloringName] = useState<string | null>(null);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+  const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
+
+  // Tick the cooldown countdown every second while a rate-limit is active
+  useEffect(() => {
+    if (!rateLimitUntil) {
+      setCooldownRemaining(0);
+      return;
+    }
+    const tick = () => {
+      const ms = rateLimitUntil - Date.now();
+      if (ms <= 0) {
+        setRateLimitUntil(null);
+        setCooldownRemaining(0);
+      } else {
+        setCooldownRemaining(Math.ceil(ms / 1000));
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [rateLimitUntil]);
   const changeProductColor = async (productName: string, hex: string) => {
     setSelectedProducts((prev) => {
       const target = prev.find((p) => p.name === productName);
@@ -547,7 +569,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       console.error('Virtual try-on error:', error);
       const msg: string = error?.message || "";
       if (msg.toLowerCase().includes("rate") || msg.includes("429") || msg.toLowerCase().includes("busy")) {
-        toast.error(msg || "AI is busy. Please wait ~30 seconds and try again.", { duration: 6000 });
+        setRateLimitUntil(Date.now() + 30_000);
+        toast.error("AI is rate-limited. Auto-retry available in 30s.", { duration: 5000 });
       } else if (msg.includes("credits") || msg.includes("402")) {
         toast.error("AI credits required. Please add credits to continue.", { duration: 5000 });
       } else if (msg.toLowerCase().includes("person detected")) {
@@ -1157,7 +1180,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
               <Button
                 onClick={processVirtualTryOn}
-                disabled={isProcessing || selectedProducts.length === 0 || !userImage}
+                disabled={isProcessing || selectedProducts.length === 0 || !userImage || cooldownRemaining > 0}
                 className="w-full"
                 size="lg"
               >
@@ -1166,6 +1189,11 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Generating...
                   </>
+                ) : cooldownRemaining > 0 ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Retry in {cooldownRemaining}s
+                  </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-5 w-5" />
@@ -1173,6 +1201,21 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
                   </>
                 )}
               </Button>
+
+              {cooldownRemaining > 0 && (
+                <div className="mt-2 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-xs flex items-start gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-amber-700 dark:text-amber-400">
+                      AI rate-limited — retry in {cooldownRemaining}s
+                    </p>
+                    <p className="text-muted-foreground mt-0.5">
+                      Free AI tier is shared. Wait for the timer or add credits in
+                      Workspace → Settings → Usage to skip the queue.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 
