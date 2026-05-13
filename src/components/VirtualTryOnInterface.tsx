@@ -569,7 +569,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       console.error('Virtual try-on error:', error);
       const msg: string = error?.message || "";
       if (msg.toLowerCase().includes("rate") || msg.includes("429") || msg.toLowerCase().includes("busy")) {
-        toast.error(msg || "AI is busy. Please wait ~30 seconds and try again.", { duration: 6000 });
+        setRateLimitUntil(Date.now() + 30_000);
+        toast.error("AI is rate-limited. Auto-retry available in 30s.", { duration: 5000 });
       } else if (msg.includes("credits") || msg.includes("402")) {
         toast.error("AI credits required. Please add credits to continue.", { duration: 5000 });
       } else if (msg.toLowerCase().includes("person detected")) {
