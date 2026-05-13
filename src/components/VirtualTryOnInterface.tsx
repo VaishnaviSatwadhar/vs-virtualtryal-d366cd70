@@ -174,6 +174,28 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
   // Recolor a selected product. Updates that product's image used for try-on.
   const [recoloringName, setRecoloringName] = useState<string | null>(null);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+  const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
+
+  // Tick the cooldown countdown every second while a rate-limit is active
+  useEffect(() => {
+    if (!rateLimitUntil) {
+      setCooldownRemaining(0);
+      return;
+    }
+    const tick = () => {
+      const ms = rateLimitUntil - Date.now();
+      if (ms <= 0) {
+        setRateLimitUntil(null);
+        setCooldownRemaining(0);
+      } else {
+        setCooldownRemaining(Math.ceil(ms / 1000));
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [rateLimitUntil]);
   const changeProductColor = async (productName: string, hex: string) => {
     setSelectedProducts((prev) => {
       const target = prev.find((p) => p.name === productName);
