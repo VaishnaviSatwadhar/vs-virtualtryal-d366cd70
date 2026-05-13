@@ -508,7 +508,18 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       });
 
       if (error) {
-        throw error;
+        // Try to read the body the edge function returned (functions.invoke wraps non-2xx)
+        const ctx: any = (error as any).context;
+        let serverMsg: string | undefined;
+        try {
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            serverMsg = body?.error;
+          } else if (ctx && typeof ctx.text === "function") {
+            serverMsg = await ctx.text();
+          }
+        } catch { /* ignore */ }
+        throw new Error(serverMsg || error.message || "Try-on request failed");
       }
 
       if (data?.error) {
@@ -534,16 +545,17 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
       }
     } catch (error: any) {
       console.error('Virtual try-on error:', error);
-      if (error.message?.includes("Rate limit") || error.message?.includes("429")) {
-        toast.error("Too many requests. Please wait a moment and try again.", { duration: 5000 });
-      } else if (error.message?.includes("credits") || error.message?.includes("402")) {
+      const msg: string = error?.message || "";
+      if (msg.toLowerCase().includes("rate") || msg.includes("429") || msg.toLowerCase().includes("busy")) {
+        toast.error(msg || "AI is busy. Please wait ~30 seconds and try again.", { duration: 6000 });
+      } else if (msg.includes("credits") || msg.includes("402")) {
         toast.error("AI credits required. Please add credits to continue.", { duration: 5000 });
-      } else if (error.message?.includes("person detected")) {
+      } else if (msg.toLowerCase().includes("person detected")) {
         toast.error("Please upload a clearer photo with your full face and upper body visible.", { duration: 6000 });
         setUserImage(null);
         setTryonResult(null);
       } else {
-        toast.error("Failed to generate try-on. Ensure your photo clearly shows a person facing the camera.", { duration: 5000 });
+        toast.error(msg || "Failed to generate try-on. Please try again.", { duration: 6000 });
       }
     } finally {
       setIsProcessing(false);
