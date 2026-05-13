@@ -100,6 +100,8 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
 
   const { wishlistItems, loading: wishlistLoading } = useWishlist();
 
+  const [productSource, setProductSource] = useState<"wishlist" | "all">("wishlist");
+
   // Build product list from user's wishlist
   const wishlistProducts: Product[] = wishlistItems.map((w) => ({
     name: w.product_name,
@@ -900,22 +902,48 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
               Tap items to layer them on your photo (e.g. shirt + jeans + accessories). Pick a color to change the variant used for try-on.
             </p>
 
-            {/* Wishlist products — tap to toggle */}
+            {/* Source toggle: Wishlist vs All Products */}
+            <div className="grid grid-cols-2 gap-2 mb-3 p-1 bg-muted rounded-lg">
+              <button
+                type="button"
+                onClick={() => setProductSource("wishlist")}
+                className={`text-xs font-medium py-1.5 rounded-md transition-colors ${
+                  productSource === "wishlist"
+                    ? "bg-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Wishlist {wishlistProducts.length > 0 && `(${wishlistProducts.length})`}
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductSource("all")}
+                className={`text-xs font-medium py-1.5 rounded-md transition-colors ${
+                  productSource === "all"
+                    ? "bg-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                All Products ({products.length})
+              </button>
+            </div>
+
+            {/* Products — tap to toggle */}
             <div className="space-y-4">
-              {wishlistLoading ? (
+              {productSource === "wishlist" && wishlistLoading ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin" />
                   <p className="text-sm">Loading your wishlist…</p>
                 </div>
-              ) : wishlistProducts.length === 0 ? (
+              ) : productSource === "wishlist" && wishlistProducts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <ShoppingBag className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">Your wishlist is empty</p>
-                  <p className="text-xs mt-1">Add items from the Product Gallery below to try them on here.</p>
+                  <p className="text-xs mt-1">Add items from the Product Gallery, or switch to "All Products" above to try anything.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
-                  {wishlistProducts.map((product) => {
+                  {(productSource === "wishlist" ? wishlistProducts : products).map((product) => {
                     const isSelected = selectedProducts.some((p) => p.name === product.name);
                     return (
                       <div
