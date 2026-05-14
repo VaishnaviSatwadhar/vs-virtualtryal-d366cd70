@@ -934,7 +934,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Tap items to layer them on your photo (e.g. shirt + jeans + accessories). Pick a color to change the variant used for try-on.
+              Tap items to layer them on your photo (e.g. shirt + jeans + accessories).
             </p>
 
             {/* Source toggle: Wishlist vs All Products */}
@@ -1041,45 +1041,6 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
                           >
                             <X className="h-4 w-4" />
                           </button>
-                        </div>
-                        <div className="mt-2">
-                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                            Color
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {DEFAULT_PALETTE.map((c) => {
-                              const isActive =
-                                (c.hex === "__original" && !p.selectedColor) ||
-                                p.selectedColor === c.hex;
-                              const busy = recoloringName === p.name;
-                              return (
-                                <button
-                                  key={c.hex}
-                                  disabled={busy}
-                                  onClick={() => changeProductColor(p.name, c.hex)}
-                                  title={c.name}
-                                  className={`relative h-6 w-6 rounded-full border-2 transition-all ${
-                                    isActive
-                                      ? "border-primary ring-2 ring-primary/30 scale-110"
-                                      : "border-border hover:border-primary/60"
-                                  } ${busy ? "opacity-60 cursor-wait" : ""}`}
-                                  style={
-                                    c.hex === "__original"
-                                      ? {
-                                          background:
-                                            "conic-gradient(from 180deg, #f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f87171)",
-                                        }
-                                      : { backgroundColor: c.hex }
-                                  }
-                                />
-                              );
-                            })}
-                          </div>
-                          {recoloringName === p.name && (
-                            <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                              <Loader2 className="h-3 w-3 animate-spin" /> Recoloring…
-                            </p>
-                          )}
                         </div>
                       </div>
                     </div>
