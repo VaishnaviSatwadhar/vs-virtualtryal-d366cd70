@@ -87,7 +87,22 @@ serve(async (req) => {
       ? namesArr.map((n, i) => `(${i + 2}) ${n}`).join(", ")
       : "the items in the following images";
     const multi = imagesArr.length > 1;
-    const prompt = `Virtual try-on: Image 1 is the person. The next ${imagesArr.length} image${multi ? "s are" : " is"} clothing/accessory item${multi ? "s" : ""}: ${itemList}. ${multi ? "Layer ALL of these items together onto the same person in a single photo, combining them naturally (e.g. shirt + pants + accessories worn at the same time). Respect realistic garment layering order." : "Fit this item onto the person."} Match body proportions, skin tone, and lighting. Render clothing at SIZE ${sizeKey} — ${sizeInstruction}. Each size up should look progressively looser/larger; each size down progressively tighter/smaller. ${viewInstruction} ${bgInstruction}. Keep the same person identity, hair, and skin. If no person visible, respond "ERROR: No person detected". Output a single photorealistic result image with all selected items worn together.`;
+    const prompt = `PHOTOREALISTIC VIRTUAL TRY-ON TASK.
+
+INPUT: Image 1 = the PERSON (reference). The next ${imagesArr.length} image${multi ? "s are" : " is"} the GARMENT${multi ? "S" : ""} to wear: ${itemList}.
+
+STRICT RULES:
+1. PERSON IDENTITY MUST BE 100% PRESERVED: exact same face, facial features, skin tone, hair, body shape, height, pose and background context as Image 1. DO NOT change the person's identity, age, gender, ethnicity, or body proportions.
+2. GARMENT FIDELITY: Reproduce each garment EXACTLY as shown — same color (do not shift hue), same pattern, prints, logos, text, buttons, zippers, stitching, neckline, sleeves, length and fabric texture. No invented details.
+3. ${multi ? "Layer ALL garments together on the same person in ONE final image, with realistic layering order (innerwear under outerwear, tops tucked or untucked naturally, accessories on top)." : "Place the garment naturally on the person, replacing any conflicting clothing in that region."}
+4. FIT: Render at SIZE ${sizeKey} — ${sizeInstruction}. Fabric must drape, fold, wrinkle and shadow realistically over the body's contours.
+5. LIGHTING & COLOR: Match the lighting direction, intensity, white balance and shadows of the original photo so the garment looks like it was actually photographed on the person.
+6. VIEW: ${viewInstruction}
+7. BACKGROUND: ${bgInstruction}.
+8. QUALITY: High-resolution photorealistic output. No cartoonish look, no extra limbs, no distorted hands/face, no floating garments, no duplicate people.
+9. If no clear person is visible in Image 1, respond with exactly: "ERROR: No person detected".
+
+OUTPUT: ONE single photorealistic image of the same person wearing the specified garment${multi ? "s" : ""}.`;
     
     const callAI = () => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
