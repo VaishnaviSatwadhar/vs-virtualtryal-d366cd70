@@ -934,7 +934,7 @@ export const VirtualTryOnInterface = ({ selectedProduct: selectedProductProp }: 
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Tap items to layer them on your photo (e.g. shirt + jeans + accessories). Pick a color to change the variant used for try-on.
+              Tap items to layer them on your photo (e.g. shirt + jeans + accessories).
             </p>
 
             {/* Source toggle: Wishlist vs All Products */}
