@@ -129,14 +129,17 @@ OUTPUT: ONE single photorealistic image of the same person wearing the specified
 
     const fullPrompt = `${prompt}\n\nITEM PLACEMENT GUIDE:\n${placementHints}\n\nADDITIONAL ACCURACY RULES:\n- Jewelry, watches and eyewear MUST appear at realistic real-world scale (not oversized).\n- Metallic items (gold, silver, platinum) must keep their exact metal tone and shine.\n- Gemstones (diamond, pearl, ruby, emerald, sapphire) must keep their exact color and cut.\n- Hands, fingers, ears and neckline must remain anatomically correct.\n- Do not remove existing clothing unless a new garment occupies the same body region.`;
     
-    const callAI = () => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const MODEL_PRIMARY = "google/gemini-3.1-flash-image-preview";
+    const MODEL_FALLBACK = "google/gemini-2.5-flash-image";
+
+    const callAI = (model: string) => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-image-preview",
+        model,
         messages: [
           {
             role: "user",
@@ -151,15 +154,25 @@ OUTPUT: ONE single photorealistic image of the same person wearing the specified
       }),
     });
 
-    // Retry on 429 with exponential backoff (free-tier rate limits are bursty)
-    let response = await callAI();
-    let attempts = 0;
-    while (response.status === 429 && attempts < 3) {
-      const wait = 1500 * Math.pow(2, attempts); // 1.5s, 3s, 6s
-      console.log(`Rate limited, retrying in ${wait}ms (attempt ${attempts + 1}/3)`);
-      await new Promise((r) => setTimeout(r, wait));
-      response = await callAI();
-      attempts++;
+    // Retry on 429 with exponential backoff; if primary preview model stays rate
+    // limited, fall back to the stable image model so users still get a result.
+    const tryWithRetries = async (model: string, maxAttempts: number) => {
+      let res = await callAI(model);
+      let attempt = 0;
+      while (res.status === 429 && attempt < maxAttempts) {
+        const wait = 2000 * Math.pow(2, attempt); // 2s, 4s, 8s, 16s
+        console.log(`[${model}] Rate limited, retrying in ${wait}ms (attempt ${attempt + 1}/${maxAttempts})`);
+        await new Promise((r) => setTimeout(r, wait));
+        res = await callAI(model);
+        attempt++;
+      }
+      return res;
+    };
+
+    let response = await tryWithRetries(MODEL_PRIMARY, 4);
+    if (response.status === 429) {
+      console.log(`Primary model rate limited, falling back to ${MODEL_FALLBACK}`);
+      response = await tryWithRetries(MODEL_FALLBACK, 3);
     }
 
     if (!response.ok) {
