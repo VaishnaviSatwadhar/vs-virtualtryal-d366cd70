@@ -103,6 +103,31 @@ STRICT RULES:
 9. If no clear person is visible in Image 1, respond with exactly: "ERROR: No person detected".
 
 OUTPUT: ONE single photorealistic image of the same person wearing the specified garment${multi ? "s" : ""}.`;
+
+    // Item placement guidance (auto-detected from product names) — helps the model
+    // put jewelry on ears/neck/fingers/wrist, watches on wrist, sunglasses on eyes,
+    // bags in hand or over shoulder, belts on waist, scarves on neck, shoes on feet,
+    // and clothing on the torso/legs.
+    const placementHints = namesArr.map((n) => {
+      const s = n.toLowerCase();
+      if (/(earring|stud)/.test(s)) return `- ${n}: place on EARS (both ears, correct scale).`;
+      if (/(necklace|pendant|chain)/.test(s)) return `- ${n}: place around the NECK, resting naturally on the collarbone.`;
+      if (/(ring|band)/.test(s)) return `- ${n}: place on a FINGER at realistic scale.`;
+      if (/(bracelet|cuff|bangle)/.test(s)) return `- ${n}: place on the WRIST.`;
+      if (/(watch|smartwatch|fitness band)/.test(s)) return `- ${n}: place on the WRIST with realistic strap fit.`;
+      if (/(sunglass|shades|glasses|eyewear|aviator)/.test(s)) return `- ${n}: place on the FACE over the eyes, aligned to the nose bridge.`;
+      if (/(cap|hat)/.test(s)) return `- ${n}: place on the HEAD at correct angle.`;
+      if (/(scarf|tie)/.test(s)) return `- ${n}: drape around the NECK.`;
+      if (/(belt)/.test(s)) return `- ${n}: place around the WAIST over pants/skirt.`;
+      if (/(handbag|tote|crossbody|backpack|bag)/.test(s)) return `- ${n}: place naturally in HAND or over the SHOULDER.`;
+      if (/(sneaker|boot|loafer|shoe|heel)/.test(s)) return `- ${n}: place on the FEET.`;
+      if (/(jeans|pant|trouser|short|skirt)/.test(s)) return `- ${n}: fit on the LOWER BODY (waist to ankles/knees).`;
+      if (/(dress|gown)/.test(s)) return `- ${n}: fit as a full DRESS covering torso and lower body.`;
+      if (/(jacket|coat|cardigan|hoodie|blazer)/.test(s)) return `- ${n}: wear as OUTERWEAR over any inner top.`;
+      return `- ${n}: place on the appropriate body region for this item, at realistic scale.`;
+    }).join("\n");
+
+    const fullPrompt = `${prompt}\n\nITEM PLACEMENT GUIDE:\n${placementHints}\n\nADDITIONAL ACCURACY RULES:\n- Jewelry, watches and eyewear MUST appear at realistic real-world scale (not oversized).\n- Metallic items (gold, silver, platinum) must keep their exact metal tone and shine.\n- Gemstones (diamond, pearl, ruby, emerald, sapphire) must keep their exact color and cut.\n- Hands, fingers, ears and neckline must remain anatomically correct.\n- Do not remove existing clothing unless a new garment occupies the same body region.`;
     
     const callAI = () => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -111,12 +136,12 @@ OUTPUT: ONE single photorealistic image of the same person wearing the specified
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
+        model: "google/gemini-3.1-flash-image-preview",
         messages: [
           {
             role: "user",
             content: [
-              { type: "text", text: prompt },
+              { type: "text", text: fullPrompt },
               { type: "image_url", image_url: { url: userImage } },
               ...imagesArr.map((url) => ({ type: "image_url" as const, image_url: { url } })),
             ]
